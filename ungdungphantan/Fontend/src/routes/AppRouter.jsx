@@ -1,33 +1,29 @@
-import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-
-import Navbar from "../Component/Navbar";
-import Footer from "../Component/Footer";
 import Home from "../pages/Home";
 import AuthPage from "../Component/AuthForm";
 import Room from "../pages/SearchPage";
+import AdminDashboard from "../pages/Admin/Dashbord";
+import UserLayout from "../layouts/UserLayout";
+import AdminLayout from "../layouts/AdminLayout";
 
 export default function AppRouter() {
   return (
-    <>
-      {/* Navbar luôn xuất hiện */}
-      <Navbar />
-
-      <Routes>
-        {/* Trang chủ */}
+    <Routes>
+      {/* Layout cho user */}
+      <Route element={<UserLayout />}>
         <Route path="/" element={<Home />} />
-
-        {/* Trang login và register */}
         <Route path="/login" element={<AuthPage />} />
         <Route path="/register" element={<AuthPage />} />
-        {/* Tang tìm kiếm phòng*/}
         <Route path="/rooms" element={<Room />} />
-        {/* Nếu nhập sai URL → quay về home */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      </Route>
 
-      {/* Footer luôn xuất hiện */}
-      <Footer />
-    </>
+      {/* Layout cho admin */}
+      <Route element={<AdminLayout />}>
+        <Route path="/admin" element={<AdminDashboard />} />
+      </Route>
+
+      {/* Sai URL thì về Home */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }

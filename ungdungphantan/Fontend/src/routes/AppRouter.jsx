@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import Home from "../pages/Home";
 import AuthPage from "../Component/AuthForm";
+import LoginForm from "../Component/LoginForm";
 import Room from "../pages/SearchPage";
 
 // --- Admin Pages ---
@@ -27,7 +28,7 @@ export default function AppRouter() {
       {/* --- Layout cho user --- */}
       <Route element={<UserLayout />}>
         <Route path="/" element={<Home />} />
-        <Route path="/login" element={<AuthPage />} />
+        <Route path="/login" element={<LoginForm />} />
         <Route path="/register" element={<AuthPage />} />
         <Route path="/rooms" element={<Room />} />
       </Route>

@@ -1,6 +1,5 @@
 import { useState } from "react";
 import bgImage from "../assets/imgs/background.jpg";
-import { loginUser } from "../api/userApi";
 
 export default function LoginForm({ onSwitch }) {
   const [form, setForm] = useState({

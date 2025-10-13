@@ -1,11 +1,11 @@
 import express from "express";
-import { registerUser } from "../modules/user.service.js";
+import { registerAdmin } from "../modules/admin.service.js";
 
 const router = express.Router();
 
 router.post("/register", async (req, res) => {
   try {
-    const result = await registerUser(req.body);
+    const result = await registerAdmin(req.body);
     res.status(201).json(result);
   } catch (err) {
     res.status(400).json({ message: err.message });

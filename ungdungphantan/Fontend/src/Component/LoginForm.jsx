@@ -1,12 +1,12 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import bgImage from "../assets/imgs/background.jpg";
+import { LoginUser } from "../api/authApi";
 
 export default function LoginForm({ onSwitch }) {
-  const [form, setForm] = useState({
-    email: "",
-    password: "",
-  });
+  const [form, setForm] = useState({ email: "", password: "" });
   const [message, setMessage] = useState("");
+  const navigate = useNavigate(); // ✅ dùng để chuyển trang
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -15,14 +15,21 @@ export default function LoginForm({ onSwitch }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const res = await loginUser({
+    const res = await LoginUser({
       email: form.email,
       password: form.password,
     });
-
-    if (res.token) {
-      localStorage.setItem("token", res.token);
+    console.log(res);
+    if (res.user) {
+      const { role } = res.user;
+      localStorage.setItem("user", JSON.stringify(res.user)); // lưu thông tin user
       setMessage("✅ Đăng nhập thành công!");
+
+      // ✅ Điều hướng theo vai trò
+      if (role === "USER") navigate("/user");
+      else if (role === "LANDLORD") navigate("/landlord");
+      else if (role === "ADMIN") navigate("/admin");
+      else navigate("/");
     } else {
       setMessage(res.message || "❌ Sai thông tin đăng nhập");
     }
@@ -33,12 +40,8 @@ export default function LoginForm({ onSwitch }) {
       className="flex min-h-screen items-center justify-center bg-cover bg-center relative"
       style={{ backgroundImage: `url(${bgImage})` }}
     >
-      {/* Overlay mờ */}
       <div className="absolute inset-0 bg-black/50" />
-
-      {/* Form */}
       <div className="relative z-10 w-full max-w-md rounded-2xl bg-white/90 p-8 shadow-xl backdrop-blur-sm">
-        {/* Header */}
         <h2 className="text-center text-3xl font-bold text-gray-800">
           Đăng nhập
         </h2>
@@ -46,7 +49,6 @@ export default function LoginForm({ onSwitch }) {
           Chào mừng bạn quay lại 👋
         </p>
 
-        {/* Form input */}
         <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
           <div>
             <label className="block text-sm font-medium text-gray-700">
@@ -78,7 +80,6 @@ export default function LoginForm({ onSwitch }) {
             />
           </div>
 
-          {/* Nút đăng nhập */}
           <button
             type="submit"
             className="w-full rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white transition hover:bg-indigo-700"
@@ -86,12 +87,10 @@ export default function LoginForm({ onSwitch }) {
             Đăng nhập
           </button>
 
-          {/* Thông báo */}
           {message && (
             <p className="text-center text-sm text-gray-700 mt-2">{message}</p>
           )}
 
-          {/* Link sang đăng ký */}
           <p className="text-center text-sm text-gray-600">
             Chưa có tài khoản?{" "}
             <button

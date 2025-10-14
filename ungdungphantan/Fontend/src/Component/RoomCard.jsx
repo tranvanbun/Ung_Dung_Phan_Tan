@@ -71,7 +71,7 @@ export default function RoomCard({
           </h3>
           <div className="text-right">
             <div className="text-lg font-extrabold text-indigo-600">
-              {priceFmt}₫
+              {priceFmt}
             </div>
             <div className="text-xs text-gray-500">{unit}</div>
           </div>

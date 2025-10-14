@@ -1,5 +1,5 @@
-import expesss from 'express';
-import { generateContract } from '../modules/contract.service.js';
+import expesss from "express";
+import { generateContractImage } from "../modules/contract.service.js";
 const router = expesss.Router();
-router.post('/', generateContract);
+router.post("/", generateContractImage);
 export default router;

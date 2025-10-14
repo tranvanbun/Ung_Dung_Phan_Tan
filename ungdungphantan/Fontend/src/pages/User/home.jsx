@@ -81,7 +81,6 @@ const Home = () => {
               <option>Vị trí</option>
               <option>Hà Nội</option>
               <option>TP.HCM</option>
-              <option>Đà Nẵng</option>
             </select>
             <select className="p-4 outline-none text-gray-700 flex-1">
               <option>Kiểu</option>

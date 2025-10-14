@@ -1,13 +1,18 @@
-import React from "react";
-import anhquangcao from "../assets/imgs/logo1.jpg";
-import anhtro from "../assets/imgs/anhtro.png";
-import RoomCard from "../Component/RoomCard";
+import React, { useState } from "react";
+import anhquangcao from "../../assets/imgs/logo1.jpg";
+import anhtro from "../../assets/imgs/anhtro.png";
+import RoomCard from "../../Component/RoomCard";
+import ModalRoomDetail from "./modal/modalRoomDetail";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 
 const Home = () => {
+  // ✅ BƯỚC 1: Thêm state cho modal
+  const [selectedRoom, setSelectedRoom] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   // Mock data: danh sách phòng mới đăng
   const newRooms = [
     {
@@ -44,6 +49,18 @@ const Home = () => {
       rating: 4.0,
     },
   ];
+
+  // ✅ BƯỚC 2: Tạo handler để mở modal
+  const handleRoomClick = (room) => {
+    setSelectedRoom(room);
+    setIsModalOpen(true);
+  };
+
+  // ✅ BƯỚC 3: Tạo handler để đóng modal
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedRoom(null);
+  };
 
   return (
     <div className="bg-gray-900 min-h-screen px-6">
@@ -104,6 +121,7 @@ const Home = () => {
         >
           {newRooms.map((room) => (
             <SwiperSlide key={room.id}>
+              {/* ✅ BƯỚC 4: Truyền onClick handler vào RoomCard */}
               <RoomCard
                 title={room.title}
                 price={room.price}
@@ -112,7 +130,8 @@ const Home = () => {
                 area={room.area}
                 beds={room.beds}
                 baths={room.baths}
-                onClick={() => console.log("Chi tiết phòng:", room.id)}
+                rating={room.rating}
+                onClick={() => handleRoomClick(room)}
                 onToggleFavorite={(fav) =>
                   console.log("Yêu thích phòng", room.id, fav)
                 }
@@ -121,6 +140,13 @@ const Home = () => {
           ))}
         </Swiper>
       </div>
+
+      {/* ✅ BƯỚC 5: Thêm Modal component */}
+      <ModalRoomDetail
+        room={selectedRoom}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+      />
     </div>
   );
 };

@@ -10,4 +10,3 @@ export const registerUser = async (data) => {
     return err.response?.data || { message: "Server error" };
   }
 };
-

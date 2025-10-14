@@ -1,8 +1,8 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import Home from "../pages/home";
+import Home from "../pages/User/home";
 import AuthPage from "../Component/AuthForm";
 import LoginForm from "../Component/LoginForm";
-import Room from "../pages/SearchPage";
+import Room from "../pages/User/SearchPage";
 
 // --- Admin Pages ---
 import AdminDashboard from "../pages/Admin/Dashbord";
@@ -15,7 +15,11 @@ import AdminLayout from "../layouts/AdminLayout";
 
 // --- User Layout ---
 import UserLayout from "../layouts/UserLayout";
-
+// --- Các trang User mới (tạo sau) ---
+import MyContracts from "../pages/User/my_contracts";
+import SupportReport from "../pages/User/support_report";
+import Payment from "../pages/User/payment";
+import AddRoom from "../pages/User/Landlord/addRoom";
 // --- Các trang Admin mới (tạo sau) ---
 import NotificationManagement from "../pages/Admin/NotificationManagement";
 import Settings from "../pages/Admin/setting";
@@ -31,6 +35,11 @@ export default function AppRouter() {
         <Route path="/login" element={<LoginForm />} />
         <Route path="/register" element={<AuthPage />} />
         <Route path="/rooms" element={<Room />} />
+        <Route path="/contracts" element={<MyContracts />} />
+        <Route path="/support" element={<SupportReport />} />
+        <Route path="/payments" element={<Payment />} />
+        <Route path="/landlord/add-room" element={<AddRoom />} />
+        {/* Thêm các route khác cho user tại đây */}
       </Route>
 
       {/* --- Layout cho admin --- */}

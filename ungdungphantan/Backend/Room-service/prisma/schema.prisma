@@ -22,3 +22,15 @@ model Room {
   updatedAt   DateTime @updatedAt
 }
 
+model Contract {
+  id          Int      @id @default(autoincrement())
+  roomId      Int
+  tenantId    Int
+  ownerId     Int
+  startDate   DateTime
+  endDate     DateTime
+  totalPrice  Float
+  pdfPath     String
+  createdAt   DateTime @default(now())
+}
+

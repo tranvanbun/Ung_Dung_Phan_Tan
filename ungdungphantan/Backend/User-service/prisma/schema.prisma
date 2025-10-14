@@ -9,33 +9,35 @@ datasource db {
 }
 
 // ======================
-// BẢNG USER CƠ BẢN
+// BẢNG USER (NGƯỜI THUÊ)
 // ======================
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  password  String
-  name      String?
-  phone     String?
-  createdAt DateTime @default(now())
+  id            Int      @id @default(autoincrement())
+  email         String   @unique
+  password      String
+  name          String?
+  phone         String?
+  signaturePath String?  // 🔹 thêm trường chữ ký
+  createdAt     DateTime @default(now())
 }
 
 // ======================
 // BẢNG LANDLORD (CHỦ TRỌ)
 // ======================
 model Landlord {
-  id         Int      @id @default(autoincrement())
-  email      String   @unique
-  password   String
-  name       String?
-  phone      String?
-  address    String?
-  createdAt  DateTime @default(now())
-  posts      Post[]
+  id            Int      @id @default(autoincrement())
+  email         String   @unique
+  password      String
+  name          String?
+  phone         String?
+  address       String?
+  signaturePath String?  // 🔹 đã có chữ ký
+  createdAt     DateTime @default(now())
+  posts         Post[]
 }
 
 // ======================
-// BẢNG ADMIN (QUẢN TRỊ VIÊN)
+// BẢNG ADMIN
 // ======================
 model Admin {
   id         Int      @id @default(autoincrement())
@@ -47,7 +49,7 @@ model Admin {
 }
 
 // ======================
-// BẢNG BÀI ĐĂNG (POST)
+// BẢNG BÀI ĐĂNG
 // ======================
 model Post {
   id          Int        @id @default(autoincrement())

@@ -1,12 +1,19 @@
 import express from "express";
-import * as roomService from "../modules/room.service.js";
+import upload from "../utils/multer.js";
+import {
+  createRoom,
+  getAllRooms,
+  getRoomById,
+  updateRoom,
+  deleteRoom,
+} from "../modules/room.service.js";
 
 const router = express.Router();
 
-router.get("/", roomService.getAllRooms);
-router.post("/", roomService.createRoom);
-router.get("/:id", roomService.getRoomById);
-router.put("/:id", roomService.updateRoom);
-router.delete("/:id", roomService.deleteRoom);
+router.post("/", upload.array("images", 5), createRoom);
+router.get("/", getAllRooms);
+router.get("/:id", getRoomById);
+router.put("/:id", upload.array("images", 5), updateRoom);
+router.delete("/:id", deleteRoom);
 
 export default router;

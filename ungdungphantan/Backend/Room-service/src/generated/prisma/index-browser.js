@@ -134,6 +134,18 @@ exports.Prisma.RoomScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.ContractScalarFieldEnum = {
+  id: 'id',
+  roomId: 'roomId',
+  tenantId: 'tenantId',
+  ownerId: 'ownerId',
+  startDate: 'startDate',
+  endDate: 'endDate',
+  totalPrice: 'totalPrice',
+  pdfPath: 'pdfPath',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -146,7 +158,8 @@ exports.Prisma.QueryMode = {
 
 
 exports.Prisma.ModelName = {
-  Room: 'Room'
+  Room: 'Room',
+  Contract: 'Contract'
 };
 
 /**

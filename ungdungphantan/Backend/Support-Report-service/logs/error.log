@@ -1,0 +1,24 @@
+[2025-10-14T02:16:45.979Z] ERROR: Get tickets failed
+
+[2025-10-14T02:16:45.981Z] ERROR: Error getting tickets:
+Error: Error fetching tickets: 
+Invalid `prisma.support_tickets.findMany()` invocation in
+C:\Users\tranb\Desktop\PTTKPM25-26_N05_Nhom4\Document\Ung_Dung_Phan_Tan\ungdungphantan\Backend\Support-Report-service\src\modules\supportTicket.service.js:43:52
+
+  40 if (status) where.status = status;
+  41 if (category) where.category = category;
+  42 
+→ 43 const tickets = await prisma.support_tickets.findMany(
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:7
+   | 
+ 6 |   provider = "postgresql"
+ 7 |   url      = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+    at SupportTicketService.getAllTickets (C:\Users\tranb\Desktop\PTTKPM25-26_N05_Nhom4\Document\Ung_Dung_Phan_Tan\ungdungphantan\Backend\Support-Report-service\src\modules\supportTicket.service.js:58:13)
+    at async SupportTicketService.getAll (C:\Users\tranb\Desktop\PTTKPM25-26_N05_Nhom4\Document\Ung_Dung_Phan_Tan\ungdungphantan\Backend\Support-Report-service\src\modules\supportTicket.service.js:185:20)
+    at async C:\Users\tranb\Desktop\PTTKPM25-26_N05_Nhom4\Document\Ung_Dung_Phan_Tan\ungdungphantan\Backend\Support-Report-service\src\routes\supportTicket.routes.js:14:21
+[2025-10-14T02:16:50.335Z] ERROR: Get reports failed
+

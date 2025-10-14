@@ -57,3 +57,29 @@ export const registerLandlord = async (data) => {
     },
   };
 };
+
+export const getLandlordById = async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ error: "ID không hợp lệ" });
+    }
+    const landlord = await prisma.landlord.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        phone: true,
+        address: true,
+        signaturePath: true,
+      },
+    });
+    if (!landlord) {
+      return res.status(404).json({ error: "Chủ nhà không tồn tại" });
+    }
+    res.status(200).json(landlord);
+  } catch (error) {
+    res.status(500).json({ error: "Lỗi máy chủ" });
+  }
+};

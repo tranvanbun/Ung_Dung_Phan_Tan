@@ -21,3 +21,19 @@ export const registerUser = async (data) => {
 
   return { message: "Đăng ký người dùng thành công", user };
 };
+export const getUserById = async (req,res) => {
+  try {
+    const id = Number(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ error: "ID không hợp lệ" });
+    }
+    const user = await prisma.user.findUnique({ where: { id }, select: { id: true, email: true, name: true, phone: true, signaturePath:true, } });
+    if (!user) {
+      return res.status(404).json({ error: "Người dùng không tồn tại" });
+    }
+    res.status(200).json(user);
+  }
+  catch (error) {
+    res.status(500).json({ error: "Lỗi máy chủ" });
+  }
+};

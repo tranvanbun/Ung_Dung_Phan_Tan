@@ -70,7 +70,18 @@ const Navbar = () => {
           >
             Hợp đồng
           </NavLink>
-
+          <NavLink
+            to="/support"
+            className={({ isActive }) =>
+              `text-gray-200 transition duration-300 pr-5 pl-5 ${
+                isActive
+                  ? "border-b-2 border-blue-600 pb-1"
+                  : "hover:text-blue-600"
+              }`
+            }
+          >
+            Liên hệ
+          </NavLink>
           <NavLink
             to="/payments"
             className={({ isActive }) =>
@@ -82,6 +93,18 @@ const Navbar = () => {
             }
           >
             Thanh toán
+          </NavLink>
+          <NavLink
+            to="/landlord/add-room"
+            className={({ isActive }) =>
+              `text-gray-200 transition duration-300 pr-5 pl-5 ${
+                isActive
+                  ? "border-b-2 border-blue-600 pb-1"
+                  : "hover:text-blue-600"
+              }`
+            }
+          >
+            Thêm phòng
           </NavLink>
         </div>
 

@@ -1,0 +1,16 @@
+version: "3.9"
+services:
+  support-db:
+    image: postgres:16
+    container_name: support-db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - ./databases/support-db/docker/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - support_data:/var/lib/postgresql/data
+    ports:
+      - "5434:5432"
+volumes:
+  support_data:

@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model SupportTicket {
+  id          Int       @id @default(autoincrement())
+  userId      String    // ID người tạo ticket
+  userRole    String    // TENANT, LANDLORD, ADMIN
+  title       String
+  description String?
+  category    String?   // TECHNICAL, PAYMENT, ROOM_ISSUE, ACCOUNT, GENERAL, OTHER
+  status      String    @default("open") // open, in_progress, resolved, closed, rejected
+  priority    String    @default("normal") // low, normal, high, urgent
+  assignedTo  String?   // Admin được giao xử lý
+  response    String?   @db.Text // Phản hồi từ admin
+  attachments Json?     // Array các link file đính kèm
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  resolvedAt  DateTime? @map("resolved_at") // Thời gian giải quyết
+  reports     Report[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([category])
+  @@map("support_tickets")
+}
+
+model Report {
+  id            Int            @id @default(autoincrement())
+  ticketId      Int?           @map("ticket_id") // Có thể null (báo cáo độc lập)
+  reporterId    String         @map("reporter_id") // ID người báo cáo
+  reporterRole  String         @map("reporter_role") // TENANT, LANDLORD
+  reportedId    String?        @map("reported_id") // ID người/phòng bị báo cáo
+  reportType    String         @map("report_type") // USER_VIOLATION, ROOM_ISSUE, PAYMENT_DISPUTE, CONTRACT_BREACH, HARASSMENT, FRAUD, OTHER
+  title         String         // Tiêu đề báo cáo
+  content       String?        @db.Text // Nội dung chi tiết
+  evidence      Json?          // Bằng chứng (ảnh, video, documents)
+  status        String         @default("pending") // pending, investigating, resolved, dismissed
+  severity      String         @default("medium") // low, medium, high, critical
+  adminNotes    String?        @db.Text @map("admin_notes") // Ghi chú của admin
+  action        String?        // Hành động xử lý (warning, ban, compensation...)
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+  resolvedAt    DateTime?      @map("resolved_at")
+  ticket        SupportTicket? @relation(fields: [ticketId], references: [id])
+
+  @@index([reporterId])
+  @@index([status])
+  @@index([reportType])
+  @@map("reports")
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  type      String?
+  payload   Json?
+  isRead    Boolean  @default(false) @map("is_read")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("notifications")
+}

@@ -3,7 +3,7 @@
 # ==========================
 FROM node:20-alpine
 
-RUN apk add --no-cache openssl1.1-compat python3 make g++ libc6-compat
+RUN apk add --no-cache python3 make g++ libc6-compat
 
 WORKDIR /app
 

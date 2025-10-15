@@ -5,7 +5,7 @@ const notificationRoutes = require("./routes/notification.routes"); // ✅ Sửa
 const errorHandler = require("./middlewares/errorHandler.middleware");
 
 const app = express();
-const PORT = process.env.PORT || 5;
+const PORT = process.env.PORT || 6000;
 
 // Middlewares
 app.use(cors());

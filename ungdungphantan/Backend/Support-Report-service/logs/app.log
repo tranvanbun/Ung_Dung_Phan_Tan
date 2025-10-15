@@ -408,3 +408,7 @@
 [2025-10-15T08:48:04.056Z] INFO: GET /api/support-tickets
 [2025-10-15T08:48:04.058Z] INFO: GET /api/support-tickets - userId: undefined, status: undefined
 [2025-10-15T08:48:40.429Z] INFO: GET /health
+[2025-10-15T12:48:53.504Z] INFO: GET /
+[2025-10-15T12:48:53.511Z] WARN: Route not found
+[2025-10-15T12:48:53.594Z] INFO: GET /favicon.ico
+[2025-10-15T12:48:53.598Z] WARN: Route not found

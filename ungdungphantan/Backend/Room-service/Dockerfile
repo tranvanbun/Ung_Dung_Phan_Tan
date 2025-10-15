@@ -1,6 +1,5 @@
 FROM node:20-alpine
 
-# ⚙️ Cài thư viện build + phụ thuộc cần cho canvas
 RUN apk add --no-cache \
     python3 \
     make \

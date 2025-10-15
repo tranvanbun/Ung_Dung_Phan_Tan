@@ -10,3 +10,25 @@ export const registerUser = async (data) => {
     return err.response?.data || { message: "Server error" };
   }
 };
+
+export const getUserById = async (userId) => {
+  try {
+    // ✅ Thêm timeout để tránh request bị treo
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+
+    const res = await axios.get(`${BASE_URL}/api/users/${userId}`, {
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+    return res.data;
+  } catch (err) {
+    if (err.name === "AbortError") {
+      console.error("❌ Request timeout");
+      return { message: "Request timeout" };
+    }
+    console.error("❌ Get user by ID error:", err);
+    return err.response?.data || { message: "Server error" };
+  }
+};

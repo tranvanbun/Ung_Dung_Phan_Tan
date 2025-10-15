@@ -3,6 +3,11 @@ const logger = require("../utils/logger");
 const prisma = new PrismaClient();
 
 class SupportTicketService {
+  // ✅ Normalize status (uppercase ↔ lowercase)
+  normalizeStatus(status) {
+    return status ? status.toLowerCase() : "open";
+  }
+
   // Tạo ticket mới
   async createTicket(data) {
     try {
@@ -10,19 +15,19 @@ class SupportTicketService {
 
       const ticket = await prisma.support_tickets.create({
         data: {
-          userId: data.userId,
-          userRole: data.userRole,
+          userId: String(data.userId), // ✅ Convert to String
+          userRole: data.userRole || "USER",
           title: data.title,
           description: data.description,
           category: data.category || "GENERAL",
-          status: "open",
-          priority: data.priority || "normal",
+          status: this.normalizeStatus(data.status),
+          priority: this.normalizeStatus(data.priority),
           attachments: data.attachments || null,
           updated_at: new Date(),
         },
       });
 
-      logger.success("Ticket created", { ticketId: ticket.id });
+      logger.info("Ticket created", { ticketId: ticket.id });
       return ticket;
     } catch (error) {
       logger.error("Create ticket failed", { error: error.message });
@@ -36,8 +41,8 @@ class SupportTicketService {
       const { userId, status, category, limit = 50, offset = 0 } = filters;
 
       const where = {};
-      if (userId) where.userId = userId;
-      if (status) where.status = status;
+      if (userId) where.userId = String(userId); // ✅ Convert to String
+      if (status) where.status = this.normalizeStatus(status);
       if (category) where.category = category;
 
       const tickets = await prisma.support_tickets.findMany({
@@ -63,7 +68,7 @@ class SupportTicketService {
   async getTicketById(ticketId) {
     try {
       const ticket = await prisma.support_tickets.findUnique({
-        where: { id: parseInt(ticketId) },
+        where: { id: String(ticketId) }, // ✅ Convert to String (nếu id là String trong schema)
       });
 
       if (!ticket) throw new Error("Ticket not found");
@@ -74,31 +79,28 @@ class SupportTicketService {
     }
   }
 
-  // ✅ THÊM METHOD NÀY - UPDATE STATUS
+  // UPDATE STATUS
   async updateStatus(ticketId, status) {
     try {
       logger.info("Updating ticket status", { ticketId, status });
 
-      const ticket = await prisma.support_tickets.findUnique({
-        where: { id: parseInt(ticketId) },
-      });
-
-      if (!ticket) throw new Error("Ticket not found");
+      const normalizedStatus = this.normalizeStatus(status);
 
       const updated = await prisma.support_tickets.update({
-        where: { id: parseInt(ticketId) },
+        where: { id: String(ticketId) }, // ✅ Convert to String
         data: {
-          status: status.toLowerCase(), // "IN_PROGRESS" → "in_progress"
+          status: normalizedStatus,
           updated_at: new Date(),
-          // Nếu status là resolved hoặc closed thì set resolved_at
-          ...(status.toLowerCase() === "resolved" ||
-          status.toLowerCase() === "closed"
+          ...(normalizedStatus === "resolved" || normalizedStatus === "closed"
             ? { resolved_at: new Date() }
             : {}),
         },
       });
 
-      logger.success("Ticket status updated", { ticketId, status });
+      logger.info("Ticket status updated", {
+        ticketId,
+        status: normalizedStatus,
+      });
       return updated;
     } catch (error) {
       logger.error("Update status failed", { error: error.message });
@@ -106,40 +108,41 @@ class SupportTicketService {
     }
   }
 
-  // Cập nhật ticket (dùng cho tất cả: update, assign, respond, close)
+  // Cập nhật ticket
   async updateTicket(ticketId, userId, data) {
     try {
       logger.info("Updating ticket", { ticketId, userId });
 
       const ticket = await prisma.support_tickets.findUnique({
-        where: { id: parseInt(ticketId) },
+        where: { id: String(ticketId) }, // ✅ Convert to String
       });
 
       if (!ticket) throw new Error("Ticket not found");
 
-      // Check quyền: User chỉ update ticket của mình, Admin update tất cả
-      if (ticket.userId !== userId && data.userRole !== "ADMIN") {
+      // Check quyền
+      if (ticket.userId !== String(userId) && data.userRole !== "ADMIN") {
         throw new Error("Unauthorized");
       }
 
       const updated = await prisma.support_tickets.update({
-        where: { id: parseInt(ticketId) },
+        where: { id: String(ticketId) }, // ✅ Convert to String
         data: {
           ...(data.title && { title: data.title }),
           ...(data.description && { description: data.description }),
-          ...(data.status && { status: data.status }),
-          ...(data.priority && { priority: data.priority }),
+          ...(data.status && { status: this.normalizeStatus(data.status) }),
+          ...(data.priority && {
+            priority: this.normalizeStatus(data.priority),
+          }),
           ...(data.assignedTo && { assignedTo: data.assignedTo }),
           ...(data.response && { response: data.response }),
           ...(data.attachments && { attachments: data.attachments }),
           updated_at: new Date(),
-          // Nếu đóng ticket thì set resolvedAt
           ...(data.status === "closed" && { resolved_at: new Date() }),
           ...(data.status === "resolved" && { resolved_at: new Date() }),
         },
       });
 
-      logger.success("Ticket updated", { ticketId });
+      logger.info("Ticket updated", { ticketId });
       return updated;
     } catch (error) {
       logger.error("Update ticket failed", { error: error.message });
@@ -153,21 +156,21 @@ class SupportTicketService {
       logger.info("Deleting ticket", { ticketId });
 
       const ticket = await prisma.support_tickets.findUnique({
-        where: { id: parseInt(ticketId) },
+        where: { id: String(ticketId) }, // ✅ Convert to String
       });
 
       if (!ticket) throw new Error("Ticket not found");
 
       // Check quyền
-      if (ticket.userId !== userId && userRole !== "ADMIN") {
+      if (ticket.userId !== String(userId) && userRole !== "ADMIN") {
         throw new Error("Unauthorized");
       }
 
       await prisma.support_tickets.delete({
-        where: { id: parseInt(ticketId) },
+        where: { id: String(ticketId) }, // ✅ Convert to String
       });
 
-      logger.success("Ticket deleted", { ticketId });
+      logger.info("Ticket deleted", { ticketId });
       return { success: true, message: "Ticket deleted" };
     } catch (error) {
       logger.error("Delete ticket failed", { error: error.message });
@@ -175,21 +178,37 @@ class SupportTicketService {
     }
   }
 
-  // ✅ THÊM METHOD CREATE CHO ROUTES (alias của createTicket)
+  // ✅ CREATE (alias)
   async create(data) {
     return this.createTicket(data);
   }
 
-  // ✅ THÊM METHOD GETALL CHO ROUTES (alias của getAllTickets)
+  // ✅ GETALL (alias) - Trả về format đúng
   async getAll(userId, status) {
     const result = await this.getAllTickets({ userId, status });
-    return result.tickets; // Chỉ trả về array tickets thôi
+    return result.tickets;
   }
 
-  // ✅ THÊM METHOD DELETE CHO ROUTES
+  // ✅ DELETE (alias)
   async delete(ticketId) {
-    // Tạm thời không check quyền, sau sẽ lấy từ JWT
     return this.deleteTicket(ticketId, null, "ADMIN");
+  }
+
+  // ✅ REPLY (thêm method mới)
+  async reply(ticketId, message, userId) {
+    try {
+      const updated = await prisma.support_tickets.update({
+        where: { id: String(ticketId) }, // ✅ Convert to String
+        data: {
+          response: message,
+          updated_at: new Date(),
+        },
+      });
+      return updated;
+    } catch (error) {
+      logger.error("Reply failed", { error: error.message });
+      throw new Error(`Error replying: ${error.message}`);
+    }
   }
 }
 

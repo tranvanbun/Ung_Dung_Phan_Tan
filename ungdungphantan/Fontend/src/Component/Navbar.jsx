@@ -1,33 +1,62 @@
 import React, { useEffect, useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { Bell, User, LogOut, Settings } from "lucide-react";
+import { getNotifications } from "../api/notificationApi";
 import logo from "../assets/imgs/logo.png";
 
 const Navbar = () => {
   const [user, setUser] = useState(null);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [showDropdown, setShowDropdown] = useState(false); // ✅ State cho dropdown
   const navigate = useNavigate();
 
-  // 🧠 Khi Navbar load, đọc thông tin người dùng từ localStorage
+  // 🧠 Load user và fetch thông báo
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
-    if (storedUser) setUser(JSON.parse(storedUser)); // { id, name, role }
+    if (storedUser) {
+      const parsedUser = JSON.parse(storedUser);
+      setUser(parsedUser);
+
+      // ✅ Fetch số thông báo chưa đọc từ API
+      fetchUnreadCount(parsedUser.id);
+    }
   }, []);
+
+  // 📡 Fetch số thông báo chưa đọc
+  const fetchUnreadCount = async (userId) => {
+    try {
+      const response = await getNotifications(userId);
+      if (response.success) {
+        const unread = response.data.notifications.filter(
+          (n) => !n.isRead
+        ).length;
+        setUnreadCount(unread);
+      }
+    } catch (error) {
+      console.error("Lỗi khi fetch thông báo:", error);
+      setUnreadCount(0);
+    }
+  };
 
   // 🧹 Đăng xuất
   const handleLogout = () => {
     localStorage.removeItem("user");
+    localStorage.removeItem("token");
     setUser(null);
+    setShowDropdown(false);
     navigate("/login");
   };
 
-  // 🛡️ Danh sách các route yêu cầu đăng nhập
+  // 🛡️ Routes yêu cầu đăng nhập
   const protectedRoutes = [
     "/contracts",
     "/support",
     "/payments",
     "/landlord/add-room",
+    "/notifications",
   ];
 
-  // ⚙️ Hàm điều hướng có kiểm tra đăng nhập
+  // ⚙️ Điều hướng có kiểm tra đăng nhập
   const handleProtectedNav = (path) => {
     if (!user && protectedRoutes.includes(path)) {
       navigate("/login");
@@ -35,6 +64,18 @@ const Navbar = () => {
       navigate(path);
     }
   };
+
+  // 🖱️ Đóng dropdown khi click outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showDropdown && !event.target.closest(".dropdown-container")) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showDropdown]);
 
   return (
     <nav className="bg-[#0B121B] shadow-md fixed top-0 left-0 w-full z-50">
@@ -52,7 +93,6 @@ const Navbar = () => {
 
         {/* 🧭 Menu */}
         <div className="hidden md:flex space-x-8">
-          {/* ✅ Trang chủ - không yêu cầu đăng nhập */}
           <button
             onClick={() => handleProtectedNav("/")}
             className="text-gray-200 transition duration-300 pr-5 pl-5 hover:text-blue-600"
@@ -60,7 +100,6 @@ const Navbar = () => {
             Trang chủ
           </button>
 
-          {/* ✅ Tìm kiếm - không yêu cầu đăng nhập */}
           <button
             onClick={() => handleProtectedNav("/rooms")}
             className="text-gray-200 transition duration-300 pr-5 pl-5 hover:text-blue-600"
@@ -68,7 +107,6 @@ const Navbar = () => {
             Tìm kiếm
           </button>
 
-          {/* 🔒 Các trang yêu cầu đăng nhập */}
           <button
             onClick={() => handleProtectedNav("/contracts")}
             className="text-gray-200 transition duration-300 pr-5 pl-5 hover:text-blue-600"
@@ -90,7 +128,6 @@ const Navbar = () => {
             Thanh toán
           </button>
 
-          {/* ✅ Chỉ hiển thị nếu user là LANDLORD và kiểm tra đăng nhập */}
           {user?.role === "LANDLORD" && (
             <button
               onClick={() => handleProtectedNav("/landlord/add-room")}
@@ -101,10 +138,9 @@ const Navbar = () => {
           )}
         </div>
 
-        {/* 🧍 Khu vực người dùng / đăng nhập */}
+        {/* 🧍 User Area */}
         <div className="hidden md:flex items-center space-x-4">
-          {/* 👤 Nếu chưa đăng nhập */}
-          {!user && (
+          {!user ? (
             <>
               <button
                 onClick={() => navigate("/login")}
@@ -119,50 +155,130 @@ const Navbar = () => {
                 Đăng ký
               </button>
             </>
-          )}
-
-          {/* ✅ Nếu đã đăng nhập */}
-          {user && (
-            <div className="flex items-center gap-3 text-gray-200">
-              <span className="font-semibold">
-                👋 Xin chào, <span className="text-blue-400">{user.name}</span>
-              </span>
-
-              {/* 🌟 Nút điều hướng theo vai trò */}
-              {user.role === "ADMIN" && (
-                <button
-                  onClick={() => navigate("/admin")}
-                  className="px-3 py-1 bg-red-600 rounded-lg text-sm hover:bg-red-700 transition"
-                >
-                  Trang Admin
-                </button>
-              )}
-
-              {user.role === "LANDLORD" && (
-                <button
-                  onClick={() => navigate("/landlord")}
-                  className="px-3 py-1 bg-green-600 rounded-lg text-sm hover:bg-green-700 transition"
-                >
-                  Quản lý phòng
-                </button>
-              )}
-
-              {user.role === "USER" && (
-                <button
-                  onClick={() => navigate(`/profile/${user.id}`)}
-                  className="px-3 py-1 bg-blue-600 rounded-lg text-sm hover:bg-blue-700 transition"
-                >
-                  Hồ sơ
-                </button>
-              )}
-
-              {/* 🔓 Đăng xuất */}
+          ) : (
+            <div className="flex items-center gap-4">
+              {/* ✅ Biểu tượng chuông thông báo */}
               <button
-                onClick={handleLogout}
-                className="px-3 py-1 bg-gray-700 rounded-lg text-sm hover:bg-gray-600 transition"
+                onClick={() => handleProtectedNav("/notifications")}
+                className="relative p-2 hover:bg-gray-700 rounded-full transition group"
+                title="Thông báo"
               >
-                Đăng xuất
+                <Bell className="w-6 h-6 text-gray-200 group-hover:text-blue-400 transition" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                )}
               </button>
+
+              {/* ✅ Avatar + Name + Dropdown */}
+              <div className="relative dropdown-container">
+                <button
+                  onClick={() => setShowDropdown(!showDropdown)}
+                  className="flex items-center gap-3 px-3 py-2 hover:bg-gray-700 rounded-lg transition group"
+                >
+                  {/* Avatar */}
+                  <img
+                    src={
+                      user.avatar ||
+                      `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                        user.name
+                      )}&background=4F46E5&color=fff`
+                    }
+                    alt={user.name}
+                    className="w-10 h-10 rounded-full border-2 border-gray-600 group-hover:border-blue-400 transition object-cover"
+                  />
+
+                  {/* Name */}
+                  <span className="text-gray-200 font-semibold group-hover:text-blue-400 transition">
+                    {user.name}
+                  </span>
+
+                  {/* Dropdown arrow */}
+                  <svg
+                    className={`w-4 h-4 text-gray-400 transition-transform ${
+                      showDropdown ? "rotate-180" : ""
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </button>
+
+                {/* ✅ Dropdown Menu */}
+                {showDropdown && (
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl py-2 z-50 border border-gray-200">
+                    {/* User Info Header */}
+                    <div className="px-4 py-3 border-b border-gray-200">
+                      <p className="text-sm font-semibold text-gray-800">
+                        {user.name}
+                      </p>
+                      <p className="text-xs text-gray-500">{user.email}</p>
+                      <span
+                        className={`inline-block mt-1 px-2 py-1 text-xs font-medium rounded ${
+                          user.role === "ADMIN"
+                            ? "bg-red-100 text-red-700"
+                            : user.role === "LANDLORD"
+                            ? "bg-green-100 text-green-700"
+                            : "bg-blue-100 text-blue-700"
+                        }`}
+                      >
+                        {user.role === "ADMIN"
+                          ? "👑 Admin"
+                          : user.role === "LANDLORD"
+                          ? "🏠 Chủ trọ"
+                          : "👤 Người thuê"}
+                      </span>
+                    </div>
+
+                    {/* Profile Button */}
+                    <button
+                      onClick={() => {
+                        navigate(`/profile/${user.id}`);
+                        setShowDropdown(false);
+                      }}
+                      className="w-full px-4 py-3 text-left text-gray-700 hover:bg-blue-50 transition flex items-center gap-3 group"
+                    >
+                      <User className="w-5 h-5 text-gray-500 group-hover:text-blue-600" />
+                      <span className="font-medium group-hover:text-blue-600">
+                        Hồ sơ cá nhân
+                      </span>
+                    </button>
+
+                    {/* Settings Button (Optional) */}
+                    <button
+                      onClick={() => {
+                        navigate("/settings");
+                        setShowDropdown(false);
+                      }}
+                      className="w-full px-4 py-3 text-left text-gray-700 hover:bg-blue-50 transition flex items-center gap-3 group"
+                    >
+                      <Settings className="w-5 h-5 text-gray-500 group-hover:text-blue-600" />
+                      <span className="font-medium group-hover:text-blue-600">
+                        Cài đặt
+                      </span>
+                    </button>
+
+                    <div className="border-t border-gray-200 mt-2"></div>
+
+                    {/* Logout Button */}
+                    <button
+                      onClick={handleLogout}
+                      className="w-full px-4 py-3 text-left text-red-600 hover:bg-red-50 transition flex items-center gap-3 group"
+                    >
+                      <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                      <span className="font-medium">Đăng xuất</span>
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>

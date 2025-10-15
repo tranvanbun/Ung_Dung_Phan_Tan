@@ -22,3 +22,58 @@ Validation Error Count: 1
     at async C:\Users\tranb\Desktop\PTTKPM25-26_N05_Nhom4\Document\Ung_Dung_Phan_Tan\ungdungphantan\Backend\Support-Report-service\src\routes\supportTicket.routes.js:14:21
 [2025-10-14T02:16:50.335Z] ERROR: Get reports failed
 
+[2025-10-15T06:53:09.377Z] ERROR: Create ticket failed
+
+[2025-10-15T06:53:09.380Z] ERROR: Error creating ticket:
+Error: Error creating ticket: 
+Invalid `prisma.support_tickets.create()` invocation in
+D:\code\Ung_Dung_Phan_Tan\ungdungphantan\Backend\Support-Report-service\src\modules\supportTicket.service.js:11:51
+
+   8 try {
+   9   logger.info("Creating ticket", { userId: data.userId });
+  10 
+→ 11   const ticket = await prisma.support_tickets.create({
+         data: {
+           userId: 1,
+           title: "asdad",
+           description: "adad",
+           category: "MAINTENANCE",
+           status: "open",
+           priority: "LOW",
+           attachments: null,
+           updated_at: new Date("2025-10-15T06:53:09.351Z"),
+       +   userRole: String
+         }
+       })
+
+Argument `userRole` is missing.
+    at SupportTicketService.createTicket (D:\code\Ung_Dung_Phan_Tan\ungdungphantan\Backend\Support-Report-service\src\modules\supportTicket.service.js:29:13)
+    at async D:\code\Ung_Dung_Phan_Tan\ungdungphantan\Backend\Support-Report-service\src\routes\supportTicket.routes.js:27:20
+[2025-10-15T06:59:18.900Z] ERROR: Create ticket failed
+
+[2025-10-15T06:59:18.902Z] ERROR: Error creating ticket:
+Error: Error creating ticket: 
+Invalid `prisma.support_tickets.create()` invocation in
+D:\code\Ung_Dung_Phan_Tan\ungdungphantan\Backend\Support-Report-service\src\modules\supportTicket.service.js:16:51
+
+  13 try {
+  14   logger.info("Creating ticket", { userId: data.userId });
+  15 
+→ 16   const ticket = await prisma.support_tickets.create({
+         data: {
+           userId: 1,
+                   ~
+           userRole: "LANDLORD",
+           title: "asdad",
+           description: "adadasd",
+           category: "MAINTENANCE",
+           status: "open",
+           priority: "normal",
+           attachments: null,
+           updated_at: new Date("2025-10-15T06:59:18.886Z")
+         }
+       })
+
+Argument `userId`: Invalid value provided. Expected String, provided Int.
+    at SupportTicketService.createTicket (D:\code\Ung_Dung_Phan_Tan\ungdungphantan\Backend\Support-Report-service\src\modules\supportTicket.service.js:34:13)
+    at async D:\code\Ung_Dung_Phan_Tan\ungdungphantan\Backend\Support-Report-service\src\routes\supportTicket.routes.js:44:20

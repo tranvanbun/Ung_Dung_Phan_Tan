@@ -20,6 +20,9 @@ import MyContracts from "../pages/User/my_contracts";
 import SupportReport from "../pages/User/support_report";
 import Payment from "../pages/User/payment";
 import AddRoom from "../pages/User/Landlord/addRoom";
+import NotificationPage from "../pages/User/notification";
+// import ProfilePage from "../pages/User/profile";
+
 // --- Các trang Admin mới (tạo sau) ---
 import NotificationManagement from "../pages/Admin/NotificationManagement";
 import Settings from "../pages/Admin/setting";
@@ -39,6 +42,8 @@ export default function AppRouter() {
         <Route path="/support" element={<SupportReport />} />
         <Route path="/payments" element={<Payment />} />
         <Route path="/landlord/add-room" element={<AddRoom />} />
+        <Route path="/notifications" element={<NotificationPage />} />
+        {/* <Route path="/profile/:id" element={<ProfilePage />} /> */}
         {/* Thêm các route khác cho user tại đây */}
       </Route>
 

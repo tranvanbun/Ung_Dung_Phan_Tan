@@ -80,6 +80,7 @@ export const getLandlordById = async (req, res) => {
     }
     res.status(200).json(landlord);
   } catch (error) {
-    res.status(500).json({ error: "Lỗi máy chủ" });
+    console.error("lỗi:",error)
+    res.status(500).json({ error : error.message});
   }
 };

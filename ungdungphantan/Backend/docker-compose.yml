@@ -1,5 +1,6 @@
 
 services:
+  # 🧩 USER SERVICE + DB
   user-service:
     build: ./User-service
     container_name: user-service
@@ -10,8 +11,10 @@ services:
     volumes:
       - ./User-service:/app
       - /app/node_modules
+    depends_on:
+      - user-service-db
 
-  user-db:
+  user-service-db:
     image: postgres:16
     container_name: user_service_db
     restart: always
@@ -20,11 +23,11 @@ services:
       POSTGRES_PASSWORD: Tranbun2005@
       POSTGRES_DB: user_service_db
     ports:
-      - "5555:5432"
+      - "5432:5432"
     volumes:
       - ./databases/user-data:/var/lib/postgresql/data
 
-
+  # 🧩 ROOM SERVICE + DB
   room-service:
     build: ./Room-service
     container_name: room-service
@@ -35,45 +38,50 @@ services:
     volumes:
       - ./Room-service:/app
       - /app/node_modules
+    depends_on:
+      - room-db
 
   room-db:
     image: postgres:16
-    container_name: room_db
+    container_name: room_service_db
     restart: always
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: Tranbun2005@
       POSTGRES_DB: room_service_db
     ports:
-      - "5555:5432"
+      - "5433:5432"
     volumes:
       - ./databases/room-data:/var/lib/postgresql/data
 
-
+  # 🧩 PAYMENT SERVICE + DB
   payment-service:
     build: ./Payment-service
     container_name: payment-service
     ports:
-      - "8000:8008"
+      - "8000:8000"
     env_file:
       - ./Payment-service/.env
     volumes:
       - ./Payment-service:/app
       - /app/node_modules
+    depends_on:
+      - payment-db
 
   payment-db:
     image: postgres:16
-    container_name: payment_db
+    container_name: payment_service_db
     restart: always
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: Tranbun2005@
       POSTGRES_DB: payment_service_db
     ports:
-      - "5555:5432"
+      - "5434:5432"
     volumes:
       - ./databases/payment-data:/var/lib/postgresql/data
 
+  # 🧩 NOTIFICATION SERVICE
   notification-service:
     build: ./Notification-service
     container_name: notification-service
@@ -85,6 +93,7 @@ services:
       - ./Notification-service:/app
       - /app/node_modules
 
+  # 🧩 SUPPORT REPORT SERVICE
   support-report-service:
     build: ./Support-Report-service
     container_name: support-report-service
@@ -96,6 +105,7 @@ services:
       - ./Support-Report-service:/app
       - /app/node_modules
 
+  # 🧩 COMMUNICATION DB
   communication-db:
     image: postgres:16
     container_name: communication_db
@@ -103,8 +113,8 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: Tranbun2005@
-      POSTGRES_DB: payment_service_db
+      POSTGRES_DB: communication_service_db
     ports:
-      - "5555:5432"
+      - "5435:5432"
     volumes:
-      - ./databases/payment-data:/var/lib/postgresql/data
+      - ./databases/communication-data:/var/lib/postgresql/data

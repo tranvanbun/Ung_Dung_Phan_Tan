@@ -167,7 +167,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "C:\\Users\\tranb\\Desktop\\PTTKPM25-26_N05_Nhom4\\Document\\Ung_Dung_Phan_Tan\\ungdungphantan\\Backend\\User-service\\src\\generated\\prisma",
+      "value": "D:\\code\\Ung_Dung_Phan_Tan\\ungdungphantan\\Backend\\User-service\\src\\generated\\prisma",
       "fromEnvVar": null
     },
     "config": {
@@ -185,7 +185,7 @@ const config = {
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "C:\\Users\\tranb\\Desktop\\PTTKPM25-26_N05_Nhom4\\Document\\Ung_Dung_Phan_Tan\\ungdungphantan\\Backend\\User-service\\prisma\\schema.prisma",
+    "sourceFilePath": "D:\\code\\Ung_Dung_Phan_Tan\\ungdungphantan\\Backend\\User-service\\prisma\\schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {

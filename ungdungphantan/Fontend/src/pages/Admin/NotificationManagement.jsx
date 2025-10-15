@@ -9,49 +9,13 @@ import {
 } from "../../api/notificationApi";
 import {
   getSupportTickets,
-  createSupportTicket,
   updateTicketStatus,
   deleteTicket,
-  getReports,
-  createReport,
-  updateReportStatus,
-  deleteReport,
+  replyToTicket,
 } from "../../api/supportReportApi";
-
-// ==================== CONSTANTS ====================
-const STATUS_COLORS = {
-  PENDING: "bg-yellow-100 text-yellow-700",
-  IN_PROGRESS: "bg-blue-100 text-blue-700",
-  INVESTIGATING: "bg-blue-100 text-blue-700",
-  RESOLVED: "bg-green-100 text-green-700",
-  CLOSED: "bg-gray-100 text-gray-700",
-  REJECTED: "bg-red-100 text-red-700",
-};
-
-const PRIORITY_COLORS = {
-  HIGH: "bg-red-100 text-red-700",
-  MEDIUM: "bg-orange-100 text-orange-700",
-  LOW: "bg-gray-100 text-gray-700",
-};
-
-const STATUS_LABELS = {
-  PENDING: "Chờ xử lý",
-  IN_PROGRESS: "Đang xử lý",
-  INVESTIGATING: "Đang điều tra",
-  RESOLVED: "Đã giải quyết",
-  CLOSED: "Đã đóng",
-  REJECTED: "Từ chối",
-};
-
-const PRIORITY_LABELS = {
-  HIGH: "Cao",
-  MEDIUM: "Trung bình",
-  LOW: "Thấp",
-};
 
 // ==================== COMPONENTS ====================
 
-// Filter Buttons Component
 const FilterButtons = ({ filters, active, onFilterChange }) => (
   <div className="flex gap-2">
     {filters.map(({ value, label }) => (
@@ -70,7 +34,6 @@ const FilterButtons = ({ filters, active, onFilterChange }) => (
   </div>
 );
 
-// Modal Component
 const Modal = ({ show, onClose, title, children }) => {
   if (!show) return null;
   return (
@@ -91,13 +54,13 @@ const Modal = ({ show, onClose, title, children }) => {
   );
 };
 
-// Form Input Component
 const FormInput = ({
   label,
   type = "text",
   value,
   onChange,
   required = true,
+  children,
   ...props
 }) => (
   <div>
@@ -117,7 +80,9 @@ const FormInput = ({
         className="w-full px-3 py-2 border rounded-lg"
         required={required}
         {...props}
-      />
+      >
+        {children}
+      </select>
     ) : (
       <input
         type={type}
@@ -130,6 +95,42 @@ const FormInput = ({
     )}
   </div>
 );
+
+const StatusBadge = ({ status, type = "ticket" }) => {
+  const configs = {
+    ticket: {
+      open: "bg-yellow-100 text-yellow-800 border-yellow-300",
+      in_progress: "bg-blue-100 text-blue-800 border-blue-300",
+      resolved: "bg-green-100 text-green-800 border-green-300",
+    },
+    priority: {
+      high: "bg-red-100 text-red-800 border-red-300",
+      medium: "bg-orange-100 text-orange-800 border-orange-300",
+      normal: "bg-gray-100 text-gray-800 border-gray-300",
+      low: "bg-gray-100 text-gray-800 border-gray-300",
+    },
+  };
+
+  const labels = {
+    open: "Chờ xử lý",
+    in_progress: "Đang xử lý",
+    resolved: "Đã xong",
+    high: "Ưu tiên cao",
+    medium: "Trung bình",
+    normal: "Bình thường",
+    low: "Thấp",
+  };
+
+  return (
+    <span
+      className={`px-3 py-1 text-xs font-medium rounded-full border ${
+        configs[type][status] || "bg-gray-100 text-gray-800"
+      }`}
+    >
+      {labels[status] || status}
+    </span>
+  );
+};
 
 // ==================== MAIN COMPONENT ====================
 
@@ -148,29 +149,16 @@ export default function NotificationManagement() {
     type: "SYSTEM",
     title: "",
     message: "",
+    sendToAll: false, // ✅ Thêm option gửi cho tất cả
   });
+  const [allUsers, setAllUsers] = useState([]); // ✅ Danh sách user
 
   // Tickets
   const [tickets, setTickets] = useState([]);
   const [filterTicketStatus, setFilterTicketStatus] = useState(null);
-  const [showTicketModal, setShowTicketModal] = useState(false);
-  const [ticketForm, setTicketForm] = useState({
-    userId: "",
-    subject: "",
-    description: "",
-    priority: "MEDIUM",
-  });
-
-  // Reports
-  const [reports, setReports] = useState([]);
-  const [filterReportStatus, setFilterReportStatus] = useState(null);
-  const [showReportModal, setShowReportModal] = useState(false);
-  const [reportForm, setReportForm] = useState({
-    reporterId: "",
-    reportedUserId: "",
-    type: "SPAM",
-    description: "",
-  });
+  const [selectedTicket, setSelectedTicket] = useState(null);
+  const [showTicketDetailModal, setShowTicketDetailModal] = useState(false);
+  const [replyMessage, setReplyMessage] = useState("");
 
   // ==================== FETCH DATA ====================
 
@@ -187,69 +175,73 @@ export default function NotificationManagement() {
           setUnreadCount(countData.unreadCount || 0);
         } else if (activeSection === "support") {
           const data = await getSupportTickets(null, filterTicketStatus);
-          setTickets(data.tickets || []);
-        } else if (activeSection === "reports") {
-          const data = await getReports(filterReportStatus);
-          setReports(data.reports || []);
+          console.log("📥 Support Tickets Response:", data); // ✅ Debug log
+
+          // ✅ Fix: Đọc đúng nested structure
+          if (data.success && data.data?.tickets) {
+            setTickets(data.data.tickets);
+          } else {
+            setTickets([]);
+            console.warn("⚠️ No tickets found or invalid response:", data);
+          }
         }
       } catch (error) {
-        console.error("Fetch error:", error);
+        console.error("❌ Fetch error:", error);
+        if (activeSection === "support") setTickets([]);
       } finally {
         setLoading(false);
       }
     };
     fetchData();
-  }, [activeSection, filterRead, filterTicketStatus, filterReportStatus]);
+  }, [activeSection, filterRead, filterTicketStatus]);
 
   // ==================== HANDLERS ====================
 
-  const handleNotifSubmit = async (e) => {
-    e.preventDefault();
-    const result = await createNotification(notifForm);
-    if (!result.message) {
-      alert("✅ Tạo thành công!");
-      setShowNotifModal(false);
-      setNotifForm({ userId: "", type: "SYSTEM", title: "", message: "" });
-      setActiveSection("notifications"); // Reload
-    } else {
-      alert("❌ " + result.message);
-    }
+  const handleViewTicket = (ticket) => {
+    setSelectedTicket(ticket);
+    setShowTicketDetailModal(true);
+    setReplyMessage("");
   };
 
-  const handleTicketSubmit = async (e) => {
+  const handleReplyTicket = async (e) => {
     e.preventDefault();
-    const result = await createSupportTicket(ticketForm);
+    if (!replyMessage.trim()) return;
+
+    const result = await replyToTicket(
+      selectedTicket.id,
+      replyMessage,
+      adminId
+    );
     if (!result.message) {
-      alert("✅ Tạo thành công!");
-      setShowTicketModal(false);
-      setTicketForm({
-        userId: "",
-        subject: "",
-        description: "",
-        priority: "MEDIUM",
-      });
+      alert("✅ Đã gửi phản hồi!");
+      setReplyMessage("");
+      setShowTicketDetailModal(false);
       setActiveSection("support");
     } else {
       alert("❌ " + result.message);
     }
   };
 
-  const handleReportSubmit = async (e) => {
-    e.preventDefault();
-    const result = await createReport(reportForm);
-    if (!result.message) {
-      alert("✅ Tạo thành công!");
-      setShowReportModal(false);
-      setReportForm({
-        reporterId: "",
-        reportedUserId: "",
-        type: "SPAM",
-        description: "",
-      });
-      setActiveSection("reports");
-    } else {
-      alert("❌ " + result.message);
-    }
+  const normalizeTicket = (ticket) => ({
+    id: ticket.id,
+    userId: ticket.userId || ticket.userid || ticket.user_id,
+    userRole: ticket.userRole || ticket.userrole || ticket.user_role || "User",
+    title: ticket.title || "Không có tiêu đề",
+    description: ticket.description || "Không có nội dung",
+    category: ticket.category,
+    status: (ticket.status || "open").toLowerCase(),
+    priority: (ticket.priority || "normal").toLowerCase(),
+    response: ticket.response,
+    assignedTo: ticket.assignedTo || ticket.assignedto,
+    created_at: ticket.created_at || ticket.createdAt,
+    updated_at: ticket.updated_at || ticket.updatedAt,
+    resolved_at: ticket.resolved_at || ticket.resolvedAt,
+  });
+
+  const getNextStatus = (status) => {
+    if (status === "open") return "in_progress";
+    if (status === "in_progress") return "resolved";
+    return null;
   };
 
   // ==================== RENDER ====================
@@ -262,42 +254,31 @@ export default function NotificationManagement() {
           📞 Quản lý Hỗ trợ & Thông báo
         </h1>
         <p className="text-gray-600 mt-2">
-          Quản lý thông báo, support tickets và báo cáo
+          Quản lý thông báo và support tickets
         </p>
       </div>
 
       {/* Navigation */}
       <div className="flex gap-4 mb-6">
-        <button
-          onClick={() => setActiveSection("notifications")}
-          className={`px-6 py-3 rounded-lg font-medium transition ${
-            activeSection === "notifications"
-              ? "bg-indigo-600 text-white shadow-lg"
-              : "bg-white text-gray-700 hover:bg-gray-100"
-          }`}
-        >
-          🔔 Thông báo {unreadCount > 0 && `(${unreadCount})`}
-        </button>
-        <button
-          onClick={() => setActiveSection("support")}
-          className={`px-6 py-3 rounded-lg font-medium transition ${
-            activeSection === "support"
-              ? "bg-indigo-600 text-white shadow-lg"
-              : "bg-white text-gray-700 hover:bg-gray-100"
-          }`}
-        >
-          🎫 Support Tickets
-        </button>
-        <button
-          onClick={() => setActiveSection("reports")}
-          className={`px-6 py-3 rounded-lg font-medium transition ${
-            activeSection === "reports"
-              ? "bg-indigo-600 text-white shadow-lg"
-              : "bg-white text-gray-700 hover:bg-gray-100"
-          }`}
-        >
-          📋 Báo cáo
-        </button>
+        {[
+          {
+            key: "notifications",
+            label: `🔔 Thông báo ${unreadCount > 0 ? `(${unreadCount})` : ""}`,
+          },
+          { key: "support", label: "🎫 Support Tickets" },
+        ].map(({ key, label }) => (
+          <button
+            key={key}
+            onClick={() => setActiveSection(key)}
+            className={`px-6 py-3 rounded-lg font-medium transition ${
+              activeSection === key
+                ? "bg-indigo-600 text-white shadow-lg"
+                : "bg-white text-gray-700 hover:bg-gray-100"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
       </div>
 
       {/* Content */}
@@ -420,128 +401,134 @@ export default function NotificationManagement() {
                     active={filterTicketStatus}
                     onFilterChange={setFilterTicketStatus}
                   />
-                  {/* <button
-                    onClick={() => setShowTicketModal(true)}
-                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-                  >
-                    + Tạo mới
-                  </button> */}
+                  <div className="text-gray-600">
+                    Tổng: <span className="font-bold">{tickets.length}</span>{" "}
+                    tickets
+                  </div>
                 </div>
 
                 {tickets.length === 0 ? (
-                  <p className="text-center text-gray-500 py-12">
-                    Không có dữ liệu
-                  </p>
+                  <div className="text-center py-12">
+                    <div className="text-6xl mb-4">📭</div>
+                    <p className="text-gray-500 text-lg">
+                      Không có yêu cầu hỗ trợ nào
+                    </p>
+                  </div>
                 ) : (
                   <div className="space-y-3">
-                    {tickets.map((t) => {
-                      const status = t.status?.toLowerCase() || "open";
-
-                      // ✅ Xác định trạng thái tiếp theo
-                      const getNextStatus = () => {
-                        if (status === "open") return "in_progress";
-                        if (status === "in_progress") return "resolved";
-                        return null; // Đã resolved thì không có next
-                      };
-
-                      const nextStatus = getNextStatus();
+                    {tickets.map((ticket) => {
+                      const t = normalizeTicket(ticket);
+                      const nextStatus = getNextStatus(t.status);
 
                       return (
                         <div
                           key={t.id}
-                          className="p-4 border rounded-lg hover:shadow-md transition"
+                          className="p-4 border rounded-lg hover:shadow-md transition cursor-pointer"
+                          onClick={() => handleViewTicket(t)}
                         >
                           <div className="flex justify-between">
                             <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className="font-bold text-gray-700">
-                                  #{t.id}
+                              <div className="flex items-center gap-2 mb-3 flex-wrap">
+                                <span className="font-bold text-gray-700 text-lg">
+                                  🎫 Ticket #{t.id}
                                 </span>
-
-                                {/* Status Badge */}
-                                <span
-                                  className={`px-2 py-1 text-xs rounded ${
-                                    status === "open"
-                                      ? "bg-yellow-100 text-yellow-700"
-                                      : status === "in_progress"
-                                      ? "bg-blue-100 text-blue-700"
-                                      : "bg-green-100 text-green-700"
-                                  }`}
-                                >
-                                  {status === "open"
-                                    ? "Chờ xử lý"
-                                    : status === "in_progress"
-                                    ? "Đang xử lý"
-                                    : "Đã xong"}
-                                </span>
-
-                                {/* Priority Badge */}
-                                <span
-                                  className={`px-2 py-1 text-xs rounded ${
-                                    t.priority?.toLowerCase() === "high"
-                                      ? "bg-red-100 text-red-700"
-                                      : t.priority?.toLowerCase() === "medium"
-                                      ? "bg-orange-100 text-orange-700"
-                                      : "bg-gray-100 text-gray-700"
-                                  }`}
-                                >
-                                  {t.priority?.toLowerCase() === "high"
-                                    ? "Cao"
-                                    : t.priority?.toLowerCase() === "medium"
-                                    ? "Trung bình"
-                                    : "Thấp"}
-                                </span>
+                                <StatusBadge status={t.status} type="ticket" />
+                                <StatusBadge
+                                  status={t.priority}
+                                  type="priority"
+                                />
+                                {t.category && (
+                                  <span className="px-3 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-800 border border-purple-300">
+                                    📂 {t.category}
+                                  </span>
+                                )}
                               </div>
 
-                              <h3 className="font-semibold text-gray-800">
-                                {t.title || t.subject}
+                              <div className="mb-3 p-2 bg-gray-50 rounded-lg">
+                                <p className="text-sm">
+                                  <span className="text-gray-500">
+                                    👤 Người gửi:
+                                  </span>{" "}
+                                  <span className="font-semibold text-gray-800">
+                                    {t.userId}
+                                  </span>{" "}
+                                  <span className="text-gray-500">
+                                    ({t.userRole})
+                                  </span>
+                                </p>
+                              </div>
+
+                              <h3 className="font-bold text-gray-900 mb-2 text-lg">
+                                {t.title}
                               </h3>
-                              <p className="text-gray-600 text-sm">
+                              <p className="text-gray-600 text-sm mb-3 line-clamp-2">
                                 {t.description}
                               </p>
-                              <p className="text-gray-400 text-xs mt-1">
-                                User: {t.userId} |{" "}
-                                {new Date(
-                                  t.created_at || t.createdAt
-                                ).toLocaleString("vi-VN")}
-                              </p>
+
+                              {t.response && (
+                                <div className="mt-3 p-3 bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-500 rounded-lg">
+                                  <p className="text-xs font-semibold text-green-700 mb-1">
+                                    ✓ Phản hồi từ Admin:
+                                  </p>
+                                  <p className="text-sm text-gray-800">
+                                    {t.response}
+                                  </p>
+                                </div>
+                              )}
+
+                              <div className="mt-3 text-xs text-gray-400">
+                                🕐{" "}
+                                {t.created_at
+                                  ? new Date(t.created_at).toLocaleString(
+                                      "vi-VN"
+                                    )
+                                  : "N/A"}
+                              </div>
                             </div>
 
-                            {/* Action Buttons */}
-                            <div className="flex flex-col gap-2">
-                              {/* ✅ NÚT GIẢI QUYẾT - Chỉ hiện khi chưa resolved */}
+                            <div
+                              className="flex flex-col gap-2 ml-4"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <button
+                                onClick={() => handleViewTicket(t)}
+                                className="px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 font-medium"
+                              >
+                                👁️ Xem
+                              </button>
+
                               {nextStatus && (
                                 <button
-                                  onClick={async () => {
-                                    await updateTicketStatus(t.id, nextStatus);
-                                    setActiveSection("support"); // Reload
+                                  onClick={() => {
+                                    updateTicketStatus(t.id, nextStatus);
+                                    setActiveSection("support");
                                   }}
-                                  className={`px-3 py-1 text-white text-sm rounded font-medium ${
-                                    status === "open"
+                                  className={`px-4 py-2 text-white text-sm rounded-lg font-medium ${
+                                    t.status === "open"
                                       ? "bg-blue-600 hover:bg-blue-700"
                                       : "bg-green-600 hover:bg-green-700"
                                   }`}
                                 >
-                                  ✓ Giải quyết
+                                  {t.status === "open"
+                                    ? "▶️ Bắt đầu"
+                                    : "✓ Hoàn thành"}
                                 </button>
                               )}
 
-                              {/* ✅ Badge "Hoàn thành" khi đã resolved */}
-                              {status === "resolved" && (
-                                <div className="px-3 py-1 bg-green-100 text-green-700 text-sm rounded text-center font-medium">
-                                  ✓ Hoàn thành
+                              {!nextStatus && (
+                                <div className="px-4 py-2 bg-green-100 text-green-700 text-sm rounded-lg text-center font-bold">
+                                  ✓ Đã xong
                                 </div>
                               )}
 
-                              {/* Delete Button */}
                               <button
                                 onClick={async () => {
-                                  if (confirm("Xóa ticket này?")) {
+                                  if (confirm(`Xóa ticket #${t.id}?`)) {
                                     await deleteTicket(t.id);
                                     setActiveSection("support");
                                   }
                                 }}
-                                className="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700"
+                                className="px-4 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 font-medium"
                               >
                                 🗑️
                               </button>
@@ -554,233 +541,273 @@ export default function NotificationManagement() {
                 )}
               </div>
             )}
-
-            {/* REPORTS */}
-            {activeSection === "reports" && (
-              <div>
-                <div className="flex justify-between items-center mb-6">
-                  <FilterButtons
-                    filters={[
-                      { value: null, label: "Tất cả" },
-                      { value: "PENDING", label: "Chờ xử lý" },
-                      { value: "INVESTIGATING", label: "Đang điều tra" },
-                      { value: "RESOLVED", label: "Đã giải quyết" },
-                    ]}
-                    active={filterReportStatus}
-                    onFilterChange={setFilterReportStatus}
-                  />
-                  <button
-                    onClick={() => setShowReportModal(true)}
-                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-                  >
-                    + Tạo mới
-                  </button>
-                </div>
-
-                {reports.length === 0 ? (
-                  <p className="text-center text-gray-500 py-12">
-                    Không có dữ liệu
-                  </p>
-                ) : (
-                  <div className="space-y-3">
-                    {reports.map((r) => (
-                      <div
-                        key={r.id}
-                        className="p-4 border rounded-lg hover:shadow-md transition"
-                      >
-                        <div className="flex justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="font-bold text-gray-700">
-                                🚨 #{r.id}
-                              </span>
-                              <span
-                                className={`px-2 py-1 text-xs rounded ${
-                                  STATUS_COLORS[r.status]
-                                }`}
-                              >
-                                {STATUS_LABELS[r.status]}
-                              </span>
-                              <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
-                                {r.type}
-                              </span>
-                            </div>
-                            <p className="text-gray-600 text-sm">
-                              {r.description}
-                            </p>
-                            <p className="text-gray-400 text-xs mt-1">
-                              {r.reporterId} → {r.reportedUserId} |{" "}
-                              {new Date(r.createdAt).toLocaleString("vi-VN")}
-                            </p>
-                          </div>
-                          <div className="flex flex-col gap-2">
-                            {r.status !== "RESOLVED" && (
-                              <>
-                                <button
-                                  onClick={async () => {
-                                    await updateReportStatus(
-                                      r.id,
-                                      "INVESTIGATING"
-                                    );
-                                    setActiveSection("reports");
-                                  }}
-                                  className="px-3 py-1 bg-blue-600 text-white text-sm rounded"
-                                >
-                                  🔍 Điều tra
-                                </button>
-                                <button
-                                  onClick={async () => {
-                                    await updateReportStatus(
-                                      r.id,
-                                      "RESOLVED",
-                                      "Đã xử lý"
-                                    );
-                                    setActiveSection("reports");
-                                  }}
-                                  className="px-3 py-1 bg-green-600 text-white text-sm rounded"
-                                >
-                                  ✓ Giải quyết
-                                </button>
-                              </>
-                            )}
-                            <button
-                              onClick={async () => {
-                                if (confirm("Xóa?")) {
-                                  await deleteReport(r.id);
-                                  setActiveSection("reports");
-                                }
-                              }}
-                              className="px-3 py-1 bg-red-600 text-white text-sm rounded"
-                            >
-                              🗑️
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
           </>
         )}
       </div>
 
-      {/* MODALS */}
+      {/* MODAL CHI TIẾT TICKET */}
+      <Modal
+        show={showTicketDetailModal}
+        onClose={() => setShowTicketDetailModal(false)}
+        title={`Chi tiết Ticket #${selectedTicket?.id || ""}`}
+      >
+        {selectedTicket && (
+          <div className="space-y-4">
+            {[
+              {
+                label: "Người gửi",
+                value: `${selectedTicket.userId} (${selectedTicket.userRole})`,
+              },
+              { label: "Tiêu đề", value: selectedTicket.title },
+              { label: "Mô tả", value: selectedTicket.description },
+              selectedTicket.category && {
+                label: "Danh mục",
+                value: selectedTicket.category,
+              },
+            ]
+              .filter(Boolean)
+              .map((field, i) => (
+                <div key={i}>
+                  <p className="text-sm text-gray-500">{field.label}</p>
+                  <p className="font-medium text-gray-700">{field.value}</p>
+                </div>
+              ))}
+
+            {selectedTicket.response && (
+              <div className="p-3 bg-green-50 border-l-4 border-green-500 rounded">
+                <p className="text-sm text-green-700 font-medium mb-1">
+                  Phản hồi trước:
+                </p>
+                <p className="text-gray-700">{selectedTicket.response}</p>
+              </div>
+            )}
+
+            <form onSubmit={handleReplyTicket} className="space-y-3">
+              <FormInput
+                label="Phản hồi của Admin"
+                type="textarea"
+                rows="4"
+                value={replyMessage}
+                onChange={(e) => setReplyMessage(e.target.value)}
+                placeholder="Nhập phản hồi..."
+              />
+              <div className="flex gap-2">
+                <button
+                  type="submit"
+                  className="flex-1 bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700"
+                >
+                  Gửi
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowTicketDetailModal(false)}
+                  className="flex-1 bg-gray-300 py-2 rounded-lg hover:bg-gray-400"
+                >
+                  Đóng
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+      </Modal>
+
+      {/* MODAL TẠO THÔNG BÁO - ✅ CẬP NHẬT */}
       <Modal
         show={showNotifModal}
-        onClose={() => setShowNotifModal(false)}
-        title="Tạo thông báo mới"
+        onClose={() => {
+          setShowNotifModal(false);
+          setNotifForm({
+            userId: "",
+            type: "SYSTEM",
+            title: "",
+            message: "",
+            sendToAll: false,
+          });
+        }}
+        title="📨 Tạo thông báo mới"
       >
-        <form onSubmit={handleNotifSubmit} className="space-y-4">
-          <FormInput
-            label="User ID"
-            value={notifForm.userId}
-            onChange={(e) =>
-              setNotifForm({ ...notifForm, userId: e.target.value })
+        <form
+          onSubmit={async (e) => {
+            e.preventDefault();
+
+            try {
+              if (notifForm.sendToAll) {
+                // ✅ Gửi cho tất cả users
+                let successCount = 0;
+                let failCount = 0;
+
+                for (const user of allUsers) {
+                  const result = await createNotification({
+                    userId: user.id,
+                    type: notifForm.type,
+                    title: notifForm.title,
+                    message: notifForm.message,
+                  });
+
+                  if (!result.message) {
+                    successCount++;
+                  } else {
+                    failCount++;
+                  }
+                }
+
+                alert(
+                  `✅ Đã gửi thành công cho ${successCount} người!\n${
+                    failCount > 0 ? `❌ Thất bại: ${failCount}` : ""
+                  }`
+                );
+              } else {
+                // ✅ Gửi cho 1 user cụ thể
+                const result = await createNotification({
+                  userId: notifForm.userId,
+                  type: notifForm.type,
+                  title: notifForm.title,
+                  message: notifForm.message,
+                });
+
+                if (!result.message) {
+                  alert("✅ Gửi thông báo thành công!");
+                } else {
+                  alert("❌ " + result.message);
+                }
+              }
+
+              setShowNotifModal(false);
+              setNotifForm({
+                userId: "",
+                type: "SYSTEM",
+                title: "",
+                message: "",
+                sendToAll: false,
+              });
+              setActiveSection("notifications");
+            } catch (error) {
+              console.error("❌ Send notification error:", error);
+              alert("❌ Có lỗi xảy ra khi gửi thông báo!");
             }
-          />
+          }}
+          className="space-y-4"
+        >
+          {/* ✅ Checkbox: Gửi cho tất cả */}
+          <div className="flex items-center gap-2 p-3 bg-indigo-50 border border-indigo-200 rounded-lg">
+            <input
+              type="checkbox"
+              id="sendToAll"
+              checked={notifForm.sendToAll}
+              onChange={(e) =>
+                setNotifForm({ ...notifForm, sendToAll: e.target.checked })
+              }
+              className="w-4 h-4 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500"
+            />
+            <label
+              htmlFor="sendToAll"
+              className="text-sm font-medium text-indigo-800 cursor-pointer"
+            >
+              📢 Gửi cho tất cả người dùng ({allUsers.length} người)
+            </label>
+          </div>
+
+          {/* ✅ Dropdown chọn User (ẩn nếu sendToAll = true) */}
+          {!notifForm.sendToAll && (
+            <FormInput
+              label="🎯 Chọn người nhận"
+              type="select"
+              value={notifForm.userId}
+              onChange={(e) =>
+                setNotifForm({ ...notifForm, userId: e.target.value })
+              }
+              required
+            >
+              <option value="">-- Chọn người dùng --</option>
+              {allUsers.map((user) => (
+                <option key={user.id} value={user.id}>
+                  {user.username || user.fullName} ({user.email}) - {user.role}
+                </option>
+              ))}
+            </FormInput>
+          )}
+
+          {/* ✅ Loại thông báo */}
           <FormInput
-            label="Loại"
+            label="📂 Loại thông báo"
             type="select"
             value={notifForm.type}
             onChange={(e) =>
               setNotifForm({ ...notifForm, type: e.target.value })
             }
           >
-            <option value="SYSTEM">SYSTEM</option>
-            <option value="PAYMENT">PAYMENT</option>
-            <option value="ROOM">ROOM</option>
-            <option value="MAINTENANCE">MAINTENANCE</option>
+            <option value="SYSTEM">🔔 SYSTEM - Thông báo hệ thống</option>
+            <option value="PAYMENT">💰 PAYMENT - Thanh toán</option>
+            <option value="ROOM">🏠 ROOM - Phòng trọ</option>
+            <option value="MAINTENANCE">🔧 MAINTENANCE - Bảo trì</option>
+            <option value="ANNOUNCEMENT">
+              📢 ANNOUNCEMENT - Thông báo chung
+            </option>
           </FormInput>
+
+          {/* ✅ Tiêu đề */}
           <FormInput
-            label="Tiêu đề"
+            label="✏️ Tiêu đề"
             value={notifForm.title}
             onChange={(e) =>
               setNotifForm({ ...notifForm, title: e.target.value })
             }
+            placeholder="Nhập tiêu đề thông báo..."
+            required
           />
+
+          {/* ✅ Nội dung */}
           <FormInput
-            label="Nội dung"
+            label="📝 Nội dung"
             type="textarea"
-            rows="4"
+            rows="5"
             value={notifForm.message}
             onChange={(e) =>
               setNotifForm({ ...notifForm, message: e.target.value })
             }
+            placeholder="Nhập nội dung thông báo chi tiết..."
+            required
           />
-          <div className="flex gap-2">
-            <button
-              type="submit"
-              className="flex-1 bg-indigo-600 text-white py-2 rounded-lg"
-            >
-              Tạo
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowNotifModal(false)}
-              className="flex-1 bg-gray-300 py-2 rounded-lg"
-            >
-              Hủy
-            </button>
-          </div>
-        </form>
-      </Modal>
 
-      <Modal
-        show={showReportModal}
-        onClose={() => setShowReportModal(false)}
-        title="Tạo báo cáo mới"
-      >
-        <form onSubmit={handleReportSubmit} className="space-y-4">
-          <FormInput
-            label="Reporter ID"
-            value={reportForm.reporterId}
-            onChange={(e) =>
-              setReportForm({ ...reportForm, reporterId: e.target.value })
-            }
-          />
-          <FormInput
-            label="Reported User ID"
-            value={reportForm.reportedUserId}
-            onChange={(e) =>
-              setReportForm({ ...reportForm, reportedUserId: e.target.value })
-            }
-          />
-          <FormInput
-            label="Loại"
-            type="select"
-            value={reportForm.type}
-            onChange={(e) =>
-              setReportForm({ ...reportForm, type: e.target.value })
-            }
-          >
-            <option value="SPAM">SPAM</option>
-            <option value="HARASSMENT">HARASSMENT</option>
-            <option value="FRAUD">FRAUD</option>
-            <option value="INAPPROPRIATE_CONTENT">INAPPROPRIATE CONTENT</option>
-            <option value="OTHER">OTHER</option>
-          </FormInput>
-          <FormInput
-            label="Mô tả"
-            type="textarea"
-            rows="4"
-            value={reportForm.description}
-            onChange={(e) =>
-              setReportForm({ ...reportForm, description: e.target.value })
-            }
-          />
+          {/* ✅ Preview */}
+          <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
+            <p className="text-xs text-gray-500 mb-2">👁️ Xem trước:</p>
+            <div className="bg-white p-3 rounded border border-gray-300">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="px-2 py-1 bg-indigo-100 text-indigo-700 text-xs rounded">
+                  {notifForm.type}
+                </span>
+              </div>
+              <h4 className="font-semibold text-gray-800 mb-1">
+                {notifForm.title || "(Chưa có tiêu đề)"}
+              </h4>
+              <p className="text-sm text-gray-600">
+                {notifForm.message || "(Chưa có nội dung)"}
+              </p>
+            </div>
+          </div>
+
+          {/* ✅ Buttons */}
           <div className="flex gap-2">
             <button
               type="submit"
-              className="flex-1 bg-indigo-600 text-white py-2 rounded-lg"
+              className="flex-1 bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition"
             >
-              Tạo
+              {notifForm.sendToAll ? "📢 Gửi cho tất cả" : "📨 Gửi thông báo"}
             </button>
             <button
               type="button"
-              onClick={() => setShowReportModal(false)}
-              className="flex-1 bg-gray-300 py-2 rounded-lg"
+              onClick={() => {
+                setShowNotifModal(false);
+                setNotifForm({
+                  userId: "",
+                  type: "SYSTEM",
+                  title: "",
+                  message: "",
+                  sendToAll: false,
+                });
+              }}
+              className="flex-1 bg-gray-300 py-3 rounded-lg font-semibold hover:bg-gray-400 transition"
             >
               Hủy
             </button>

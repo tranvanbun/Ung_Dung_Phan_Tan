@@ -34,21 +34,40 @@ export default function AddRoom() {
   // 🚀 Gửi dữ liệu về backend
   const handleSubmit = async () => {
     try {
-      const payload = {
-        title: formData.title,
-        description: formData.description,
-        price: parseFloat(formData.price),
-        area: parseFloat(formData.area),
-        address: formData.address,
-        imageUrls: formData.images, // khi kết nối Cloudinary sẽ thay bằng link thực
-      };
-
-      console.log("📤 Dữ liệu gửi đi:", payload);
-
-      // Gửi API (sau này đổi URL về server thật của bạn)
-      await axios.post("http://localhost:4001/api/rooms", payload);
-
-      alert("✅ Phòng đã được đăng thành công!");
+      const user = JSON.parse(localStorage.getItem("user"));
+      if (!user || !user.id) {
+        alert("Vui lòng đăng nhập trước khi thêm phòng.");
+        return;
+      }
+      if (user.role !== "LANDLORD") {
+        alert("Chỉ chủ nhà mới có quyền thêm phòng.");
+        return;
+      }
+      const form = new FormData();
+      form.append("title", formData.title);
+      form.append("description", formData.description);
+      form.append("price", formData.price);
+      form.append("area", formData.area);
+      form.append("address", formData.address);
+      form.append("ownerId", user.id);
+      // Gửi ảnh (nếu có)
+      const fileInput = document.getElementById("image-upload");
+      const files = fileInput.files;
+      if (files.length > 0) {
+        for (let i = 0; i < files.length; i++) {
+          form.append("images", files[i]);
+        }
+      } else {
+        alert("Vui lòng tải lên ít nhất một hình ảnh của phòng.");
+        return;
+      }
+      // Gọi API
+      const res = await axios.post("http://localhost:4000/rooms", form, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      alert("Thêm phòng thành công!");
+      console.log("✅ Phòng mới:", res.data);
+      // Reset form
       setFormData({
         title: "",
         description: "",
@@ -57,9 +76,10 @@ export default function AddRoom() {
         address: "",
         images: [],
       });
-    } catch (err) {
-      console.error("❌ Lỗi khi đăng phòng:", err);
-      alert("Đăng phòng thất bại, vui lòng thử lại!");
+      document.getElementById("image-upload").value = null;
+    } catch (error) {
+      console.error("❌ Lỗi thêm phòng:", error);
+      alert(error.message);
     }
   };
 

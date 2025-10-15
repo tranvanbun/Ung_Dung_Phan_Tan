@@ -160,6 +160,10 @@ const config = {
         "fromEnvVar": null,
         "value": "windows",
         "native": true
+      },
+      {
+        "fromEnvVar": null,
+        "value": "linux-musl-openssl-3.0.x"
       }
     ],
     "previewFeatures": [],
@@ -186,8 +190,8 @@ const config = {
       }
     }
   },
-  "inlineSchema": "// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\n// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?\n// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init\n\ngenerator client {\n  provider = \"prisma-client-js\"\n  output   = \"../src/generated/prisma\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\nmodel BankConfig {\n  id          Int      @id @default(autoincrement())\n  landlordId  Int      @unique\n  bankCode    String\n  bankName    String\n  accountNo   String\n  accountName String\n  createdAt   DateTime @default(now())\n  updatedAt   DateTime @updatedAt\n\n  payments Payment[]\n}\n\nmodel Payment {\n  id            Int      @id @default(autoincrement())\n  tenantId      Int\n  landlordId    Int\n  contractId    Int?\n  amount        Float\n  description   String\n  qrUrl         String\n  transactionId String?\n  status        String   @default(\"PENDING\") // PENDING | PAID | FAILED\n  createdAt     DateTime @default(now())\n  updatedAt     DateTime @updatedAt\n\n  bankConfig BankConfig @relation(fields: [landlordId], references: [landlordId])\n}\n",
-  "inlineSchemaHash": "7046709530f3059d86864493d9de85a622346851beda483e5d518511a505f44f",
+  "inlineSchema": "// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\n// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?\n// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init\n\ngenerator client {\n  provider      = \"prisma-client-js\"\n  output        = \"../src/generated/prisma\"\n  binaryTargets = [\"native\", \"linux-musl-openssl-3.0.x\"]\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\nmodel BankConfig {\n  id          Int      @id @default(autoincrement())\n  landlordId  Int      @unique\n  bankCode    String\n  bankName    String\n  accountNo   String\n  accountName String\n  createdAt   DateTime @default(now())\n  updatedAt   DateTime @updatedAt\n\n  payments Payment[]\n}\n\nmodel Payment {\n  id            Int      @id @default(autoincrement())\n  tenantId      Int\n  landlordId    Int\n  contractId    Int?\n  amount        Float\n  description   String\n  qrUrl         String\n  transactionId String?\n  status        String   @default(\"PENDING\") // PENDING | PAID | FAILED\n  createdAt     DateTime @default(now())\n  updatedAt     DateTime @updatedAt\n\n  bankConfig BankConfig @relation(fields: [landlordId], references: [landlordId])\n}\n",
+  "inlineSchemaHash": "faf8776f07cb8842ee72aff55a76aa5b4a5b9200d71bb87d80d25485607f79c7",
   "copyEngine": true
 }
 
@@ -228,6 +232,10 @@ Object.assign(exports, Prisma)
 // file annotations for bundling tools to include these files
 path.join(__dirname, "query_engine-windows.dll.node");
 path.join(process.cwd(), "src/generated/prisma/query_engine-windows.dll.node")
+
+// file annotations for bundling tools to include these files
+path.join(__dirname, "libquery_engine-linux-musl-openssl-3.0.x.so.node");
+path.join(process.cwd(), "src/generated/prisma/libquery_engine-linux-musl-openssl-3.0.x.so.node")
 // file annotations for bundling tools to include these files
 path.join(__dirname, "schema.prisma");
 path.join(process.cwd(), "src/generated/prisma/schema.prisma")

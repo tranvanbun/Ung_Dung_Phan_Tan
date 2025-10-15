@@ -1,4 +1,5 @@
 import axios from "axios";
+import { cloneElement } from "react";
 const BASE_URL = "http://localhost:3000"; // URL của Landlord-service backend
 export const registerLandLord = async (data) => {
   try {
@@ -8,3 +9,15 @@ export const registerLandLord = async (data) => {
     return err.response?.data || { message: "Server error" };
   }
 };
+export const getLandLordById = async(Id) =>
+{
+  try{
+    const res = await axios.get(`${BASE_URL}/landlord/search/${id}`);
+    console.log("Dữ liệu chủ trọ: ",res.data);
+    return res.data;
+  }
+  catch(error){
+    console.error("loi:",error)
+    throw error;
+  }
+}

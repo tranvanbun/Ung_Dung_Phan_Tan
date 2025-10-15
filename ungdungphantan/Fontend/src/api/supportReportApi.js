@@ -105,9 +105,7 @@ export const createReport = async (data) => {
   }
 };
 
-/**
- * Cập nhật status report
- */
+
 export const updateReportStatus = async (
   reportId,
   status,
@@ -124,9 +122,7 @@ export const updateReportStatus = async (
   }
 };
 
-/**
- * Xóa report
- */
+
 export const deleteReport = async (reportId) => {
   try {
     const res = await axios.delete(`${BASE_URL}/api/reports/${reportId}`);

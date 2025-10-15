@@ -1,16 +1,110 @@
-version: "3.9"
+
 services:
-  support-db:
+  user-service:
+    build: ./User-service
+    container_name: user-service
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./User-service/.env
+    volumes:
+      - ./User-service:/app
+      - /app/node_modules
+
+  user-db:
     image: postgres:16
-    container_name: support-db
+    container_name: user_service_db
     restart: always
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    volumes:
-      - ./databases/support-db/docker/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
-      - support_data:/var/lib/postgresql/data
+      POSTGRES_PASSWORD: Tranbun2005@
+      POSTGRES_DB: user_service_db
     ports:
-      - "5434:5432"
-volumes:
-  support_data:
+      - "5555:5432"
+    volumes:
+      - ./databases/user-data:/var/lib/postgresql/data
+
+
+  room-service:
+    build: ./Room-service
+    container_name: room-service
+    ports:
+      - "4000:4000"
+    env_file:
+      - ./Room-service/.env
+    volumes:
+      - ./Room-service:/app
+      - /app/node_modules
+
+  room-db:
+    image: postgres:16
+    container_name: room_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Tranbun2005@
+      POSTGRES_DB: room_service_db
+    ports:
+      - "5555:5432"
+    volumes:
+      - ./databases/room-data:/var/lib/postgresql/data
+
+
+  payment-service:
+    build: ./Payment-service
+    container_name: payment-service
+    ports:
+      - "8000:8008"
+    env_file:
+      - ./Payment-service/.env
+    volumes:
+      - ./Payment-service:/app
+      - /app/node_modules
+
+  payment-db:
+    image: postgres:16
+    container_name: payment_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Tranbun2005@
+      POSTGRES_DB: payment_service_db
+    ports:
+      - "5555:5432"
+    volumes:
+      - ./databases/payment-data:/var/lib/postgresql/data
+
+  notification-service:
+    build: ./Notification-service
+    container_name: notification-service
+    ports:
+      - "6000:6000"
+    env_file:
+      - ./Notification-service/.env
+    volumes:
+      - ./Notification-service:/app
+      - /app/node_modules
+
+  support-report-service:
+    build: ./Support-Report-service
+    container_name: support-report-service
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./Support-Report-service/.env
+    volumes:
+      - ./Support-Report-service:/app
+      - /app/node_modules
+
+  communication-db:
+    image: postgres:16
+    container_name: communication_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Tranbun2005@
+      POSTGRES_DB: payment_service_db
+    ports:
+      - "5555:5432"
+    volumes:
+      - ./databases/payment-data:/var/lib/postgresql/data

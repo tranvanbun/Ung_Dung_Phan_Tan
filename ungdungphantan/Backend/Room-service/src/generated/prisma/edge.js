@@ -155,6 +155,10 @@ const config = {
         "fromEnvVar": null,
         "value": "windows",
         "native": true
+      },
+      {
+        "fromEnvVar": null,
+        "value": "linux-musl-openssl-3.0.x"
       }
     ],
     "previewFeatures": [],
@@ -181,8 +185,8 @@ const config = {
       }
     }
   },
-  "inlineSchema": "generator client {\n  provider = \"prisma-client-js\"\n  output   = \"../src/generated/prisma\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\nmodel Room {\n  id          Int      @id @default(autoincrement())\n  title       String\n  description String\n  price       Float\n  area        Float\n  address     String\n  imageUrls   String[]\n  status      String   @default(\"available\")\n  ownerId     Int\n  createdAt   DateTime @default(now())\n  updatedAt   DateTime @updatedAt\n}\n\nmodel Contract {\n  id         Int      @id @default(autoincrement())\n  roomId     Int\n  tenantId   Int\n  ownerId    Int\n  startDate  DateTime\n  endDate    DateTime\n  totalPrice Float\n  pdfPath    String\n  createdAt  DateTime @default(now())\n}\n",
-  "inlineSchemaHash": "6dff293b4933ed0aafdd3ebc6ffd920464e585aed87d5f629840e314f8493766",
+  "inlineSchema": "generator client {\n  provider      = \"prisma-client-js\"\n  output        = \"../src/generated/prisma\"\n  binaryTargets = [\"native\", \"linux-musl-openssl-3.0.x\"]\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\nmodel Room {\n  id          Int      @id @default(autoincrement())\n  title       String\n  description String\n  price       Float\n  area        Float\n  address     String\n  imageUrls   String[]\n  status      String   @default(\"available\")\n  ownerId     Int\n  createdAt   DateTime @default(now())\n  updatedAt   DateTime @updatedAt\n}\n\nmodel Contract {\n  id         Int      @id @default(autoincrement())\n  roomId     Int\n  tenantId   Int\n  ownerId    Int\n  startDate  DateTime\n  endDate    DateTime\n  totalPrice Float\n  pdfPath    String\n  createdAt  DateTime @default(now())\n}\n",
+  "inlineSchemaHash": "ca4fe78f8092d7a4ad697dd5f5288e6a18491b601120b461e44af35cd5786480",
   "copyEngine": true
 }
 config.dirname = '/'

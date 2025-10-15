@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BASE_URL = "http://localhost:5001"; // URL của Notification-service backend
+const BASE_URL = "http://localhost:6000"; // URL của Notification-service backend
 
 /**
  * Lấy tất cả notifications của user

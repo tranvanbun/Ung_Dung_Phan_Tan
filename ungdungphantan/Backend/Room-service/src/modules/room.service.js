@@ -3,7 +3,6 @@ import cloudinary from "../utils/cloudinary.js";
 
 const prisma = new PrismaClient();
 
-
 export const createRoom = async (req, res) => {
   try {
     const { title, description, price, area, address, ownerId } = req.body;
@@ -47,9 +46,6 @@ export const createRoom = async (req, res) => {
   }
 };
 
-/**
- * 📋 Lấy tất cả phòng
- */
 export const getAllRooms = async (req, res) => {
   try {
     const { location, type, minPrice, maxPrice } = req.query;
@@ -92,16 +88,12 @@ export const getAllRooms = async (req, res) => {
   }
 };
 
-/**
- * 🔍 Lấy phòng theo ID
- */
 export const getRoomById = async (req, res) => {
   try {
     const roomId = Number(req.params.id);
     const room = await prisma.room.findUnique({ where: { id: roomId } });
 
-    if (!room)
-      return res.status(404).json({ message: "Không tìm thấy phòng" });
+    if (!room) return res.status(404).json({ message: "Không tìm thấy phòng" });
 
     res.status(200).json(room);
   } catch (error) {
@@ -110,15 +102,14 @@ export const getRoomById = async (req, res) => {
   }
 };
 
-/**
- * ✏️ Cập nhật phòng (cho phép upload ảnh mới)
- */
 export const updateRoom = async (req, res) => {
   try {
     const roomId = Number(req.params.id);
     const { title, description, price, area, address, status } = req.body;
 
-    const existingRoom = await prisma.room.findUnique({ where: { id: roomId } });
+    const existingRoom = await prisma.room.findUnique({
+      where: { id: roomId },
+    });
     if (!existingRoom)
       return res.status(404).json({ message: "Không tìm thấy phòng" });
 
@@ -171,13 +162,12 @@ export const updateRoom = async (req, res) => {
   }
 };
 
-/**
- * 🗑️ Xóa phòng
- */
 export const deleteRoom = async (req, res) => {
   try {
     const roomId = Number(req.params.id);
-    const existingRoom = await prisma.room.findUnique({ where: { id: roomId } });
+    const existingRoom = await prisma.room.findUnique({
+      where: { id: roomId },
+    });
     if (!existingRoom)
       return res.status(404).json({ message: "Không tìm thấy phòng để xóa" });
 
@@ -186,5 +176,79 @@ export const deleteRoom = async (req, res) => {
   } catch (error) {
     console.error("❌ Lỗi khi xóa phòng:", error);
     res.status(500).json({ message: "Lỗi server khi xóa phòng" });
+  }
+};
+
+export const getRoomsByOwner = async (req, res) => {
+  try {
+    const ownerId = Number(req.params.ownerId);
+    const rooms = await prisma.room.findMany({
+      where: { ownerId },
+      orderBy: { createdAt: "desc" },
+    });
+
+    if (rooms.length === 0)
+      return res.status(404).json({ message: "Chủ nhà chưa có phòng nào" });
+
+    res.status(200).json(rooms);
+  } catch (error) {
+    console.error("❌ Lỗi khi lấy phòng theo chủ nhà:", error);
+    res.status(500).json({ message: "Lỗi server khi lấy phòng" });
+  }
+};
+
+export const updateRoomStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const validStatus = ["available", "occupied", "maintenance"];
+    if (!validStatus.includes(status)) {
+      return res.status(400).json({
+        message: "Trạng thái không hợp lệ (available, occupied, maintenance)",
+      });
+    }
+
+    const updated = await prisma.room.update({
+      where: { id: Number(id) },
+      data: { status },
+    });
+
+    res
+      .status(200)
+      .json({ message: "✅ Cập nhật trạng thái thành công", room: updated });
+  } catch (error) {
+    console.error("❌ Lỗi cập nhật trạng thái phòng:", error);
+    res
+      .status(500)
+      .json({ message: "Lỗi server khi cập nhật trạng thái phòng" });
+  }
+};
+
+
+export const getLatestRooms = async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 3;
+
+    const rooms = await prisma.room.findMany({
+      orderBy: { createdAt: "desc" },
+      take: limit,
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        price: true,
+        area: true,
+        address: true,
+        imageUrls: true,
+        createdAt: true,
+        status: true,
+      },
+    });
+
+    res.status(200).json(rooms);
+  } catch (error) {
+    console.error("❌ Lỗi khi lấy phòng mới nhất:", error.message);
+    res.status(500).json({ message: error.message, stack: error.stack });
   }
 };

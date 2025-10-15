@@ -178,6 +178,10 @@ const config = {
         "fromEnvVar": null,
         "value": "windows",
         "native": true
+      },
+      {
+        "fromEnvVar": null,
+        "value": "linux-musl-openssl-3.0.x"
       }
     ],
     "previewFeatures": [],
@@ -195,6 +199,7 @@ const config = {
     "db"
   ],
   "activeProvider": "postgresql",
+  "postinstall": false,
   "inlineDatasources": {
     "db": {
       "url": {
@@ -203,8 +208,8 @@ const config = {
       }
     }
   },
-  "inlineSchema": "generator client {\n  provider = \"prisma-client-js\"\n  output   = \"../src/generated/prisma\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\n// ======================\n// BẢNG USER (NGƯỜI THUÊ)\n// ======================\nmodel User {\n  id            Int      @id @default(autoincrement())\n  email         String   @unique\n  password      String\n  name          String?\n  phone         String?\n  signaturePath String? // 🔹 thêm trường chữ ký\n  createdAt     DateTime @default(now())\n}\n\n// ======================\n// BẢNG LANDLORD (CHỦ TRỌ)\n// ======================\nmodel Landlord {\n  id            Int      @id @default(autoincrement())\n  email         String   @unique\n  password      String\n  name          String?\n  phone         String?\n  address       String?\n  signaturePath String? // 🔹 đã có chữ ký\n  createdAt     DateTime @default(now())\n  posts         Post[]\n}\n\n// ======================\n// BẢNG ADMIN\n// ======================\nmodel Admin {\n  id        Int      @id @default(autoincrement())\n  email     String   @unique\n  password  String\n  name      String?\n  createdAt DateTime @default(now())\n  isSuper   Boolean  @default(false)\n}\n\n// ======================\n// BẢNG BÀI ĐĂNG\n// ======================\nmodel Post {\n  id          Int      @id @default(autoincrement())\n  title       String\n  description String\n  price       Float\n  location    String\n  landlordId  Int\n  landlord    Landlord @relation(fields: [landlordId], references: [id])\n  createdAt   DateTime @default(now())\n  updatedAt   DateTime @updatedAt\n}\n",
-  "inlineSchemaHash": "01e0b2f11d13811fd1690321e6c41cf98a8864a296c53515b45c08a242d1717f",
+  "inlineSchema": "generator client {\n  provider      = \"prisma-client-js\"\n  output        = \"../src/generated/prisma\"\n  binaryTargets = [\"native\", \"linux-musl-openssl-3.0.x\"]\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\n// ======================\n// BẢNG USER (NGƯỜI THUÊ)\n// ======================\nmodel User {\n  id            Int      @id @default(autoincrement())\n  email         String   @unique\n  password      String\n  name          String?\n  phone         String?\n  signaturePath String? // 🔹 thêm trường chữ ký\n  createdAt     DateTime @default(now())\n}\n\n// ======================\n// BẢNG LANDLORD (CHỦ TRỌ)\n// ======================\nmodel Landlord {\n  id            Int      @id @default(autoincrement())\n  email         String   @unique\n  password      String\n  name          String?\n  phone         String?\n  address       String?\n  signaturePath String? // 🔹 đã có chữ ký\n  createdAt     DateTime @default(now())\n  posts         Post[]\n}\n\n// ======================\n// BẢNG ADMIN\n// ======================\nmodel Admin {\n  id        Int      @id @default(autoincrement())\n  email     String   @unique\n  password  String\n  name      String?\n  createdAt DateTime @default(now())\n  isSuper   Boolean  @default(false)\n}\n\n// ======================\n// BẢNG BÀI ĐĂNG\n// ======================\nmodel Post {\n  id          Int      @id @default(autoincrement())\n  title       String\n  description String\n  price       Float\n  location    String\n  landlordId  Int\n  landlord    Landlord @relation(fields: [landlordId], references: [id])\n  createdAt   DateTime @default(now())\n  updatedAt   DateTime @updatedAt\n}\n",
+  "inlineSchemaHash": "0dcd525aee5a4bf49f22ca23e003d284291878abd67bb29f416a6689c6871859",
   "copyEngine": true
 }
 
@@ -245,6 +250,10 @@ Object.assign(exports, Prisma)
 // file annotations for bundling tools to include these files
 path.join(__dirname, "query_engine-windows.dll.node");
 path.join(process.cwd(), "src/generated/prisma/query_engine-windows.dll.node")
+
+// file annotations for bundling tools to include these files
+path.join(__dirname, "libquery_engine-linux-musl-openssl-3.0.x.so.node");
+path.join(process.cwd(), "src/generated/prisma/libquery_engine-linux-musl-openssl-3.0.x.so.node")
 // file annotations for bundling tools to include these files
 path.join(__dirname, "schema.prisma");
 path.join(process.cwd(), "src/generated/prisma/schema.prisma")

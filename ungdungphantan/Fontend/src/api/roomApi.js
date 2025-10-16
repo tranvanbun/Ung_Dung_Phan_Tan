@@ -1,5 +1,8 @@
 import axios from "axios";
+
 const BASE_URL = "http://localhost:4000";
+const API_URL = `${BASE_URL}/api/rooms`; // ✅ Thêm dòng này (đã thiếu)
+
 export const getAllRooms = async (filters = {}) => {
   try {
     const params = new URLSearchParams(filters).toString();
@@ -13,7 +16,7 @@ export const getAllRooms = async (filters = {}) => {
 
 export const getRoomById = async (id) => {
   try {
-    const res = await axios.get(`${API_URL}/search/${id}`);
+    const res = await axios.get(`${API_URL}/${id}`);
     return res.data;
   } catch (error) {
     console.error("❌ Lỗi getRoomById:", error);
@@ -54,6 +57,7 @@ export const deleteRoom = async (id) => {
     throw error;
   }
 };
+
 export const getRoomByOwner = async (ownerId) => {
   try {
     const res = await axios.get(`${API_URL}/owner/${ownerId}`);
@@ -63,9 +67,10 @@ export const getRoomByOwner = async (ownerId) => {
     throw error;
   }
 };
+
 export const getLatestRooms = async () => {
   try {
-    const res = await axios.get(`${API_URL}/rooms/latest`);
+    const res = await axios.get(`${BASE_URL}/api/rooms/latest`);
     return res.data;
   } catch (error) {
     console.error("❌ Lỗi getLatestRooms:", error);

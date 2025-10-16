@@ -144,7 +144,11 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
+<<<<<<< HEAD
       "value": "/app/src/generated/prisma",
+=======
+      "value": "D:\\code\\Ung_Dung_Phan_Tan\\ungdungphantan\\Backend\\Room-service\\src\\generated\\prisma",
+>>>>>>> c88de854 (lala)
       "fromEnvVar": null
     },
     "config": {
@@ -162,7 +166,11 @@ const config = {
       }
     ],
     "previewFeatures": [],
+<<<<<<< HEAD
     "sourceFilePath": "/app/prisma/schema.prisma",
+=======
+    "sourceFilePath": "D:\\code\\Ung_Dung_Phan_Tan\\ungdungphantan\\Backend\\Room-service\\prisma\\schema.prisma",
+>>>>>>> c88de854 (lala)
     "isCustomOutput": true
   },
   "relativeEnvPaths": {

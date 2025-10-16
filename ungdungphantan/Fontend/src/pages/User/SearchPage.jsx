@@ -1,117 +1,145 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import RoomCard from "../../Component/RoomCard";
 import ModalRoomDetail from "./modal/modalRoomDetail";
-
-const roomsData = [
-  {
-    id: 1,
-    title: "Phòng trọ tiện nghi Hà Nội",
-    price: 3000000,
-    location: "Hà Nội",
-    type: "Phòng trọ",
-    area: 20,
-    beds: 1,
-    baths: 1,
-    imageUrl: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c",
-  },
-  {
-    id: 2,
-    title: "Nhà nguyên căn TP.HCM",
-    price: 7500000,
-    location: "TP.HCM",
-    type: "Nhà nguyên căn",
-    area: 60,
-    beds: 3,
-    baths: 2,
-    imageUrl: "https://images.unsplash.com/photo-1560185127-6ed189bf02f4",
-  },
-  {
-    id: 3,
-    title: "Chung cư mini Đà Nẵng",
-    price: 4200000,
-    location: "Đà Nẵng",
-    type: "Chung cư",
-    area: 30,
-    beds: 2,
-    baths: 1,
-    imageUrl: "https://images.unsplash.com/photo-1505691938895-1758d7feb511",
-  },
-  {
-    id: 4,
-    title: "Phòng giá rẻ Hà Nội",
-    price: 2000000,
-    location: "Hà Nội",
-    type: "Phòng trọ",
-    area: 15,
-    beds: 1,
-    baths: 1,
-    imageUrl: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267",
-  },
-];
+import { getAllRooms } from "../../api/roomApi"; // ✅ Import API
 
 export default function SearchPage() {
+  const [searchName, setSearchName] = useState(""); // ✅ Thêm state tìm kiếm theo tên
   const [location, setLocation] = useState("");
   const [type, setType] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
-
-  // ✅ BƯỚC 1: Thêm state cho modal
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const filteredRooms = roomsData.filter((room) => {
-    const matchLocation = location ? room.location === location : true;
-    const matchType = type ? room.type === type : true;
+  // ✅ State để lưu danh sách phòng từ API
+  const [rooms, setRooms] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  // ✅ Gọi API khi component mount
+  useEffect(() => {
+    fetchRooms();
+  }, []);
+
+  const fetchRooms = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await getAllRooms();
+      setRooms(data.rooms || data); // Tùy response từ backend
+    } catch (err) {
+      setError("Không thể tải danh sách phòng");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ✅ Lọc phòng dựa trên filter (bao gồm tìm kiếm theo tên)
+  const filteredRooms = rooms.filter((room) => {
+    const matchName = searchName
+      ? room.title.toLowerCase().includes(searchName.toLowerCase())
+      : true;
+    const matchLocation = location
+      ? room.address.toLowerCase().includes(location.toLowerCase())
+      : true;
+    const matchType = type
+      ? room.title.toLowerCase().includes(type.toLowerCase())
+      : true;
     const matchPrice =
       (minPrice ? room.price >= parseInt(minPrice) : true) &&
       (maxPrice ? room.price <= parseInt(maxPrice) : true);
 
-    return matchLocation && matchType && matchPrice;
+    return matchName && matchLocation && matchType && matchPrice;
   });
 
-  // ✅ BƯỚC 2: Tạo handler để mở modal
   const handleRoomClick = (room) => {
     setSelectedRoom(room);
     setIsModalOpen(true);
   };
 
-  // ✅ BƯỚC 3: Tạo handler để đóng modal
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedRoom(null);
   };
 
+  // ✅ Reset tất cả bộ lọc
+  const handleResetFilters = () => {
+    setSearchName("");
+    setLocation("");
+    setType("");
+    setMinPrice("");
+    setMaxPrice("");
+  };
+
+  // ✅ Hiển thị loading
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <p className="text-xl">Đang tải danh sách phòng...</p>
+      </div>
+    );
+  }
+
+  // ✅ Hiển thị lỗi
+  if (error) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <p className="text-xl text-red-500">{error}</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-200 px-6 py-10 mt-10">
       <div className="container mx-auto">
-        {/* Bộ lọc */}
-        <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-4">
-          <select
+        <h1 className="text-3xl font-bold text-gray-800 mb-6"></h1>
+
+        {/* ✅ Thanh tìm kiếm theo tên */}
+        <div className="mb-6">
+          <div className="relative">
+            <input
+              type="text"
+              value={searchName}
+              onChange={(e) => setSearchName(e.target.value)}
+              placeholder="🔎 Tìm kiếm theo tên phòng..."
+              className="w-full rounded-lg border-2 border-gray-300 px-5 py-3 text-lg outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-400"
+            />
+            {searchName && (
+              <button
+                onClick={() => setSearchName("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Bộ lọc nâng cao */}
+        <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-5">
+          <input
+            type="text"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
+            placeholder="📍 Địa điểm"
             className="rounded-lg border px-4 py-2 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-400"
-          >
-            <option value="">Chọn địa điểm</option>
-            <option value="Hà Nội">Hà Nội</option>
-            <option value="TP.HCM">TP.HCM</option>
-          </select>
+          />
 
-          <select
+          <input
+            type="text"
             value={type}
             onChange={(e) => setType(e.target.value)}
+            placeholder="🏠 Loại phòng"
             className="rounded-lg border px-4 py-2 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-400"
-          >
-            <option value="">Chọn loại phòng</option>
-            <option value="Phòng trọ">Phòng trọ</option>
-            <option value="Nhà nguyên căn">Nhà nguyên căn</option>
-            <option value="Chung cư">Chung cư mini</option>
-          </select>
+          />
 
           <input
             type="number"
             value={minPrice}
             onChange={(e) => setMinPrice(e.target.value)}
-            placeholder="Giá tối thiểu"
+            placeholder="💰 Giá tối thiểu"
             className="rounded-lg border px-4 py-2 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-400"
           />
 
@@ -119,25 +147,43 @@ export default function SearchPage() {
             type="number"
             value={maxPrice}
             onChange={(e) => setMaxPrice(e.target.value)}
-            placeholder="Giá tối đa"
+            placeholder="💰 Giá tối đa"
             className="rounded-lg border px-4 py-2 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-400"
           />
+
+          {/* ✅ Nút reset bộ lọc */}
+          <button
+            onClick={handleResetFilters}
+            className="rounded-lg bg-gray-600 px-4 py-2 text-white hover:bg-gray-700 transition"
+          >
+            🔄 Xóa lọc
+          </button>
+        </div>
+
+        {/* Hiển thị số kết quả */}
+        <div className="mb-4 flex items-center justify-between">
+          <p className="text-gray-600">
+            Tìm thấy{" "}
+            <span className="font-bold text-indigo-600">
+              {filteredRooms.length}
+            </span>{" "}
+            phòng
+          </p>
         </div>
 
         {/* Danh sách kết quả */}
         {filteredRooms.length > 0 ? (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {filteredRooms.map((room) => (
-              /* ✅ BƯỚC 4: Truyền onClick handler vào RoomCard */
               <RoomCard
                 key={room.id}
                 title={room.title}
                 price={room.price}
-                address={room.location}
-                imageUrl={room.imageUrl}
+                address={room.address}
+                imageUrl={
+                  room.imageUrls?.[0] || "https://via.placeholder.com/400"
+                }
                 area={room.area}
-                beds={room.beds}
-                baths={room.baths}
                 onClick={() => handleRoomClick(room)}
                 onToggleFavorite={(fav) =>
                   console.log("Yêu thích phòng", room.id, fav)
@@ -146,11 +192,20 @@ export default function SearchPage() {
             ))}
           </div>
         ) : (
-          <p className="text-gray-600">Không tìm thấy phòng nào phù hợp.</p>
+          <div className="text-center py-20">
+            <p className="text-xl text-gray-500">
+              ❌ Không tìm thấy phòng nào phù hợp
+            </p>
+            <button
+              onClick={handleResetFilters}
+              className="mt-4 px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+            >
+              Xem tất cả phòng
+            </button>
+          </div>
         )}
       </div>
 
-      {/* ✅ BƯỚC 5: Thêm Modal component */}
       <ModalRoomDetail
         room={selectedRoom}
         isOpen={isModalOpen}

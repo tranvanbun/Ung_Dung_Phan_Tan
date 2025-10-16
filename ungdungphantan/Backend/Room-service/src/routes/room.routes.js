@@ -13,13 +13,18 @@ import {
 
 const router = express.Router();
 
-router.post("/", upload.array("images", 5), createRoom);
-router.get("/", getAllRooms);
+// ✅ Đặt route cụ thể trước route có params
 router.get("/latest", getLatestRooms);
-router.get("/search/:id", getRoomById);
+router.get("/owner/:ownerId", getRoomsByOwner);
+
+// ✅ Route chung
+router.get("/", getAllRooms);
+router.post("/", upload.array("images", 5), createRoom);
+
+// ✅ Sửa từ /search/:id thành /:id để khớp với frontend
+router.get("/:id", getRoomById);
 router.put("/:id", upload.array("images", 5), updateRoom);
 router.delete("/:id", deleteRoom);
-router.get("/owner/:ownerId", getRoomsByOwner);
 router.patch("/:id/status", updateRoomStatus);
-router.get("/latest", getLatestRooms);
+
 export default router;

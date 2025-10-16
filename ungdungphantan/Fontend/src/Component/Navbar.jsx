@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Bell, User, LogOut, Settings } from "lucide-react";
+import axios from "axios"; // ✅ Thêm axios
 import { getNotifications } from "../api/notificationApi";
 import logo from "../assets/imgs/logo.png";
 
 const Navbar = () => {
   const [user, setUser] = useState(null);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [showDropdown, setShowDropdown] = useState(false); // ✅ State cho dropdown
+  const [showDropdown, setShowDropdown] = useState(false);
   const navigate = useNavigate();
 
   // 🧠 Load user và fetch thông báo
@@ -16,8 +17,6 @@ const Navbar = () => {
     if (storedUser) {
       const parsedUser = JSON.parse(storedUser);
       setUser(parsedUser);
-
-      // ✅ Fetch số thông báo chưa đọc từ API
       fetchUnreadCount(parsedUser.id);
     }
   }, []);
@@ -47,7 +46,7 @@ const Navbar = () => {
     navigate("/login");
   };
 
-  // 🛡️ Routes yêu cầu đăng nhập
+  // 🛡️ Các route cần đăng nhập
   const protectedRoutes = [
     "/contracts",
     "/support",
@@ -65,22 +64,55 @@ const Navbar = () => {
     }
   };
 
-  // 🖱️ Đóng dropdown khi click outside
+  // 🖱️ Đóng dropdown khi click ra ngoài
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (showDropdown && !event.target.closest(".dropdown-container")) {
         setShowDropdown(false);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showDropdown]);
 
+  // 📤 Upload chữ ký trực tiếp qua API
+  const handleSignatureUpload = async (file) => {
+    if (!file || !user) return;
+
+    try {
+      const formData = new FormData();
+      formData.append("signature", file);
+      formData.append("id", user.id);
+      formData.append("role", user.role);
+
+      const response = await axios.post(
+        "http://localhost:3000/signatures/upload", // ⚠️ đổi port nếu backend khác (vd: 4000)
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
+
+      alert("✅ Upload chữ ký thành công!");
+      console.log("URL chữ ký:", response.data.signatureUrl);
+
+      // Cập nhật user mới có chữ ký
+      const updatedUser = {
+        ...user,
+        signaturePath: response.data.signatureUrl,
+      };
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      setUser(updatedUser);
+    } catch (error) {
+      console.error("❌ Lỗi khi tải chữ ký lên:", error);
+      alert(
+        error.response?.data?.message || "❌ Lỗi khi tải chữ ký lên máy chủ!"
+      );
+    }
+  };
+
   return (
     <nav className="bg-[#0B121B] shadow-md fixed top-0 left-0 w-full z-50">
       <div className="container mx-auto px-6 py-3 flex justify-between items-center">
-        {/* 🧩 Logo + Brand */}
+        {/* 🧩 Logo */}
         <div
           onClick={() => navigate("/")}
           className="flex items-center space-x-2 cursor-pointer"
@@ -99,35 +131,30 @@ const Navbar = () => {
           >
             Trang chủ
           </button>
-
           <button
             onClick={() => handleProtectedNav("/rooms")}
             className="text-gray-200 transition duration-300 pr-5 pl-5 hover:text-blue-600"
           >
             Tìm kiếm
           </button>
-
           <button
             onClick={() => handleProtectedNav("/contracts")}
             className="text-gray-200 transition duration-300 pr-5 pl-5 hover:text-blue-600"
           >
             Hợp đồng
           </button>
-
           <button
             onClick={() => handleProtectedNav("/support")}
             className="text-gray-200 transition duration-300 pr-5 pl-5 hover:text-blue-600"
           >
             Liên hệ
           </button>
-
           <button
             onClick={() => handleProtectedNav("/payments")}
             className="text-gray-200 transition duration-300 pr-5 pl-5 hover:text-blue-600"
           >
             Thanh toán
           </button>
-
           {user?.role === "LANDLORD" && (
             <button
               onClick={() => handleProtectedNav("/landlord/add-room")}
@@ -138,7 +165,7 @@ const Navbar = () => {
           )}
         </div>
 
-        {/* 🧍 User Area */}
+        {/* 👤 User Area */}
         <div className="hidden md:flex items-center space-x-4">
           {!user ? (
             <>
@@ -157,7 +184,7 @@ const Navbar = () => {
             </>
           ) : (
             <div className="flex items-center gap-4">
-              {/* ✅ Biểu tượng chuông thông báo */}
+              {/* 🔔 Thông báo */}
               <button
                 onClick={() => handleProtectedNav("/notifications")}
                 className="relative p-2 hover:bg-gray-700 rounded-full transition group"
@@ -171,13 +198,12 @@ const Navbar = () => {
                 )}
               </button>
 
-              {/* ✅ Avatar + Name + Dropdown */}
+              {/* 👤 Dropdown */}
               <div className="relative dropdown-container">
                 <button
                   onClick={() => setShowDropdown(!showDropdown)}
                   className="flex items-center gap-3 px-3 py-2 hover:bg-gray-700 rounded-lg transition group"
                 >
-                  {/* Avatar */}
                   <img
                     src={
                       user.avatar ||
@@ -188,13 +214,9 @@ const Navbar = () => {
                     alt={user.name}
                     className="w-10 h-10 rounded-full border-2 border-gray-600 group-hover:border-blue-400 transition object-cover"
                   />
-
-                  {/* Name */}
                   <span className="text-gray-200 font-semibold group-hover:text-blue-400 transition">
                     {user.name}
                   </span>
-
-                  {/* Dropdown arrow */}
                   <svg
                     className={`w-4 h-4 text-gray-400 transition-transform ${
                       showDropdown ? "rotate-180" : ""
@@ -212,10 +234,9 @@ const Navbar = () => {
                   </svg>
                 </button>
 
-                {/* ✅ Dropdown Menu */}
+                {/* 🧾 Dropdown menu */}
                 {showDropdown && (
                   <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl py-2 z-50 border border-gray-200">
-                    {/* User Info Header */}
                     <div className="px-4 py-3 border-b border-gray-200">
                       <p className="text-sm font-semibold text-gray-800">
                         {user.name}
@@ -238,13 +259,13 @@ const Navbar = () => {
                       </span>
                     </div>
 
-                    {/* Profile Button */}
+                    {/* Hồ sơ */}
                     <button
                       onClick={() => {
                         navigate(`/profile/${user.id}`);
                         setShowDropdown(false);
                       }}
-                      className="w-full px-4 py-3 text-left text-gray-700 hover:bg-blue-50 transition flex items-center gap-3 group"
+                      className="w-full px-4 py-3 text-left text-gray-700 hover:bg-blue-50 flex items-center gap-3 group"
                     >
                       <User className="w-5 h-5 text-gray-500 group-hover:text-blue-600" />
                       <span className="font-medium group-hover:text-blue-600">
@@ -252,26 +273,47 @@ const Navbar = () => {
                       </span>
                     </button>
 
-                    {/* Settings Button (Optional) */}
+                    {/* 🖋️ Upload chữ ký */}
                     <button
-                      onClick={() => {
-                        navigate("/settings");
-                        setShowDropdown(false);
-                      }}
-                      className="w-full px-4 py-3 text-left text-gray-700 hover:bg-blue-50 transition flex items-center gap-3 group"
+                      onClick={() =>
+                        document.getElementById("signatureInput").click()
+                      }
+                      className="w-full px-4 py-3 text-left text-gray-700 hover:bg-blue-50 flex items-center gap-3 group"
                     >
                       <Settings className="w-5 h-5 text-gray-500 group-hover:text-blue-600" />
                       <span className="font-medium group-hover:text-blue-600">
-                        Cài đặt
+                        Thêm chữ ký
                       </span>
                     </button>
 
+                    <input
+                      id="signatureInput"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => handleSignatureUpload(e.target.files[0])}
+                    />
+
+                    {/* ✅ Hiển thị chữ ký (nếu có) */}
+                    {user.signaturePath && (
+                      <div className="border-t border-gray-200 mt-2 px-4 py-3 text-center">
+                        <p className="text-sm text-gray-700 mb-2 font-medium">
+                          Chữ ký của bạn:
+                        </p>
+                        <img
+                          src={user.signaturePath}
+                          alt="Chữ ký"
+                          className="w-32 mx-auto border rounded-md shadow-sm"
+                        />
+                      </div>
+                    )}
+
                     <div className="border-t border-gray-200 mt-2"></div>
 
-                    {/* Logout Button */}
+                    {/* Đăng xuất */}
                     <button
                       onClick={handleLogout}
-                      className="w-full px-4 py-3 text-left text-red-600 hover:bg-red-50 transition flex items-center gap-3 group"
+                      className="w-full px-4 py-3 text-left text-red-600 hover:bg-red-50 flex items-center gap-3 group"
                     >
                       <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform" />
                       <span className="font-medium">Đăng xuất</span>

@@ -412,3 +412,19 @@
 [2025-10-15T12:48:53.511Z] WARN: Route not found
 [2025-10-15T12:48:53.594Z] INFO: GET /favicon.ico
 [2025-10-15T12:48:53.598Z] WARN: Route not found
+[2025-10-15T17:17:11.360Z] INFO: GET /api/support-tickets
+[2025-10-15T17:17:11.365Z] INFO: GET /api/support-tickets - userId: 1, status: undefined
+[2025-10-15T17:17:11.530Z] INFO: GET /api/support-tickets
+[2025-10-15T17:17:11.533Z] INFO: GET /api/support-tickets - userId: 1, status: undefined
+[2025-10-15T17:17:12.850Z] INFO: GET /api/support-tickets
+[2025-10-15T17:17:12.853Z] INFO: GET /api/support-tickets - userId: 1, status: undefined
+[2025-10-15T17:17:12.971Z] INFO: GET /api/support-tickets
+[2025-10-15T17:17:12.974Z] INFO: GET /api/support-tickets - userId: 1, status: undefined
+[2025-10-16T00:15:56.144Z] INFO: GET /api/support-tickets
+[2025-10-16T00:15:56.153Z] INFO: GET /api/support-tickets - userId: 1, status: undefined
+[2025-10-16T00:15:56.859Z] INFO: GET /api/support-tickets
+[2025-10-16T00:15:56.866Z] INFO: GET /api/support-tickets - userId: 1, status: undefined
+[2025-10-16T00:16:04.942Z] INFO: GET /api/support-tickets
+[2025-10-16T00:16:04.947Z] INFO: GET /api/support-tickets - userId: 1, status: undefined
+[2025-10-16T00:16:04.960Z] INFO: GET /api/support-tickets
+[2025-10-16T00:16:04.965Z] INFO: GET /api/support-tickets - userId: 1, status: undefined

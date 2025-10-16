@@ -26,8 +26,8 @@ export default function LoginForm({ onSwitch }) {
       setMessage("✅ Đăng nhập thành công!");
 
       // ✅ Điều hướng theo vai trò
-      if (role === "USER") navigate("/");
-      else if (role === "LANDLORD") navigate("/");
+      if (role === "USER") navigate("/user");
+      else if (role === "LANDLORD") navigate("/landlord");
       else if (role === "ADMIN") navigate("/admin");
       else navigate("/");
     } else {

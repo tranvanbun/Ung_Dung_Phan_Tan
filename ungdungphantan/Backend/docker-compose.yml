@@ -1,3 +1,4 @@
+
 services:
   # 🧩 USER SERVICE + DB
   user-service:
@@ -12,7 +13,6 @@ services:
       - /app/node_modules
     depends_on:
       - user-service-db
-    command: sh -c "npx prisma migrate deploy && npm start"
 
   user-service-db:
     image: postgres:16
@@ -20,12 +20,12 @@ services:
     restart: always
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 123456
+      POSTGRES_PASSWORD: Tranbun2005@
       POSTGRES_DB: user_service_db
     ports:
       - "5432:5432"
     volumes:
-      - user-data:/var/lib/postgresql/data
+      - ./databases/user-data:/var/lib/postgresql/data
 
   # 🧩 ROOM SERVICE + DB
   room-service:
@@ -40,7 +40,6 @@ services:
       - /app/node_modules
     depends_on:
       - room-db
-    command: sh -c "npx prisma migrate deploy && npm start"
 
   room-db:
     image: postgres:16
@@ -48,12 +47,12 @@ services:
     restart: always
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 123456
+      POSTGRES_PASSWORD: Tranbun2005@
       POSTGRES_DB: room_service_db
     ports:
       - "5433:5432"
     volumes:
-      - room-data:/var/lib/postgresql/data
+      - ./databases/room-data:/var/lib/postgresql/data
 
   # 🧩 PAYMENT SERVICE + DB
   payment-service:
@@ -68,7 +67,6 @@ services:
       - /app/node_modules
     depends_on:
       - payment-db
-    command: sh -c "npx prisma migrate deploy && npm start"
 
   payment-db:
     image: postgres:16
@@ -76,14 +74,14 @@ services:
     restart: always
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 123456
+      POSTGRES_PASSWORD: Tranbun2005@
       POSTGRES_DB: payment_service_db
     ports:
       - "5434:5432"
     volumes:
-      - payment-data:/var/lib/postgresql/data
+      - ./databases/payment-data:/var/lib/postgresql/data
 
-  # 🧩 NOTIFICATION SERVICE (chạy migration cho communication-db)
+  # 🧩 NOTIFICATION SERVICE
   notification-service:
     build: ./Notification-service
     container_name: notification-service
@@ -94,9 +92,6 @@ services:
     volumes:
       - ./Notification-service:/app
       - /app/node_modules
-    depends_on:
-      - communication-db
-    command: sh -c "npx prisma migrate deploy && npm start"
 
   # 🧩 SUPPORT REPORT SERVICE
   support-report-service:
@@ -109,27 +104,17 @@ services:
     volumes:
       - ./Support-Report-service:/app
       - /app/node_modules
-    depends_on:
-      - communication-db
-    command: sh -c "npx prisma migrate deploy && npm start"
 
-  # 🧩 COMMUNICATION DB (dùng chung cho notification và support-report)
+  # 🧩 COMMUNICATION DB
   communication-db:
     image: postgres:16
     container_name: communication_db
     restart: always
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 123456
+      POSTGRES_PASSWORD: Tranbun2005@
       POSTGRES_DB: communication_service_db
     ports:
       - "5435:5432"
     volumes:
-      - communication-data:/var/lib/postgresql/data
-
-# ✅ Khai báo volumes
-volumes:
-  user-data:
-  room-data:
-  payment-data:
-  communication-data:
+      - ./databases/communication-data:/var/lib/postgresql/data

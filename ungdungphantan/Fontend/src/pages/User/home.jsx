@@ -35,7 +35,6 @@ const Home = () => {
     fetchRooms();
   }, []);
 
-  // 🧠 Xử lý mở modal chi tiết
   const handleRoomClick = (room) => {
     setSelectedRoom(room);
     setIsModalOpen(true);
@@ -90,7 +89,6 @@ const Home = () => {
         </div>
       </div>
 
-      {/* 🏘️ Danh sách phòng mới đăng */}
       <div className="container mx-auto py-10">
         <h2 className="text-2xl font-bold text-gray-200 mb-6">
           Phòng mới được đăng
@@ -117,7 +115,7 @@ const Home = () => {
                   title={room.title}
                   price={room.price}
                   address={room.address}
-                  imageUrl={room.imageUrls?.[0]} // hình đầu tiên
+                  imageUrl={room.imageUrls?.[0]}
                   area={room.area}
                   rating={4.5}
                   onClick={() => handleRoomClick(room)}
@@ -128,7 +126,6 @@ const Home = () => {
         )}
       </div>
 
-      {/* 🔍 Modal chi tiết phòng */}
       <ModalRoomDetail
         room={selectedRoom}
         isOpen={isModalOpen}

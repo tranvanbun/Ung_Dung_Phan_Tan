@@ -4,7 +4,7 @@ import axios from "axios";
 const prisma = new PrismaClient();
 export const createPayment = async (req, res) => {
   try {
-    const { tenantId, landlordId, contractId, amount, description } = req.body;
+    const { tenantId, landlordId, amount, description } = req.body;
 
     // 🔹 Lấy cấu hình ngân hàng của chủ nhà
     const config = await prisma.bankConfig.findUnique({
@@ -32,7 +32,6 @@ export const createPayment = async (req, res) => {
       data: {
         tenantId,
         landlordId,
-        contractId,
         amount: parseFloat(amount),
         description,
         qrUrl,

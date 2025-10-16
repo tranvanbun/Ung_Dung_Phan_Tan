@@ -77,15 +77,9 @@ D:\code\Ung_Dung_Phan_Tan\ungdungphantan\Backend\Support-Report-service\src\modu
 Argument `userId`: Invalid value provided. Expected String, provided Int.
     at SupportTicketService.createTicket (D:\code\Ung_Dung_Phan_Tan\ungdungphantan\Backend\Support-Report-service\src\modules\supportTicket.service.js:34:13)
     at async D:\code\Ung_Dung_Phan_Tan\ungdungphantan\Backend\Support-Report-service\src\routes\supportTicket.routes.js:44:20
-<<<<<<< HEAD
 [2025-10-15T17:17:11.517Z] ERROR: Get tickets failed
 
 [2025-10-15T17:17:11.520Z] ERROR: Error getting tickets:
-=======
-[2025-10-16T00:06:01.708Z] ERROR: Get tickets failed
-
-[2025-10-16T00:06:01.816Z] ERROR: Error getting tickets:
->>>>>>> c88de854 (lala)
 Error: Error fetching tickets: 
 Invalid `prisma.support_tickets.findMany()` invocation:
 
@@ -94,15 +88,9 @@ Database `communication_db` does not exist
     at SupportTicketService.getAllTickets (/app/src/modules/supportTicket.service.js:63:13)
     at async SupportTicketService.getAll (/app/src/modules/supportTicket.service.js:188:20)
     at async /app/src/routes/supportTicket.routes.js:14:21
-<<<<<<< HEAD
 [2025-10-15T17:17:11.649Z] ERROR: Get tickets failed
 
 [2025-10-15T17:17:11.652Z] ERROR: Error getting tickets:
-=======
-[2025-10-16T00:06:02.037Z] ERROR: Get tickets failed
-
-[2025-10-16T00:06:02.047Z] ERROR: Error getting tickets:
->>>>>>> c88de854 (lala)
 Error: Error fetching tickets: 
 Invalid `prisma.support_tickets.findMany()` invocation:
 
@@ -111,15 +99,9 @@ Database `communication_db` does not exist
     at SupportTicketService.getAllTickets (/app/src/modules/supportTicket.service.js:63:13)
     at async SupportTicketService.getAll (/app/src/modules/supportTicket.service.js:188:20)
     at async /app/src/routes/supportTicket.routes.js:14:21
-<<<<<<< HEAD
 [2025-10-15T17:17:12.963Z] ERROR: Get tickets failed
 
 [2025-10-15T17:17:12.967Z] ERROR: Error getting tickets:
-=======
-[2025-10-16T00:06:23.487Z] ERROR: Get tickets failed
-
-[2025-10-16T00:06:23.498Z] ERROR: Error getting tickets:
->>>>>>> c88de854 (lala)
 Error: Error fetching tickets: 
 Invalid `prisma.support_tickets.findMany()` invocation:
 
@@ -128,15 +110,9 @@ Database `communication_db` does not exist
     at SupportTicketService.getAllTickets (/app/src/modules/supportTicket.service.js:63:13)
     at async SupportTicketService.getAll (/app/src/modules/supportTicket.service.js:188:20)
     at async /app/src/routes/supportTicket.routes.js:14:21
-<<<<<<< HEAD
 [2025-10-15T17:17:13.087Z] ERROR: Get tickets failed
 
 [2025-10-15T17:17:13.091Z] ERROR: Error getting tickets:
-=======
-[2025-10-16T00:06:23.722Z] ERROR: Get tickets failed
-
-[2025-10-16T00:06:23.736Z] ERROR: Error getting tickets:
->>>>>>> c88de854 (lala)
 Error: Error fetching tickets: 
 Invalid `prisma.support_tickets.findMany()` invocation:
 
@@ -145,28 +121,3 @@ Database `communication_db` does not exist
     at SupportTicketService.getAllTickets (/app/src/modules/supportTicket.service.js:63:13)
     at async SupportTicketService.getAll (/app/src/modules/supportTicket.service.js:188:20)
     at async /app/src/routes/supportTicket.routes.js:14:21
-<<<<<<< HEAD
-=======
-[2025-10-16T00:09:28.072Z] ERROR: Get tickets failed
-
-[2025-10-16T00:09:28.078Z] ERROR: Error getting tickets:
-Error: Error fetching tickets: 
-Invalid `prisma.support_tickets.findMany()` invocation:
-
-
-The table `public.support_tickets` does not exist in the current database.
-    at SupportTicketService.getAllTickets (/app/src/modules/supportTicket.service.js:63:13)
-    at async SupportTicketService.getAll (/app/src/modules/supportTicket.service.js:188:20)
-    at async /app/src/routes/supportTicket.routes.js:14:21
-[2025-10-16T00:09:28.170Z] ERROR: Get tickets failed
-
-[2025-10-16T00:09:28.176Z] ERROR: Error getting tickets:
-Error: Error fetching tickets: 
-Invalid `prisma.support_tickets.findMany()` invocation:
-
-
-The table `public.support_tickets` does not exist in the current database.
-    at SupportTicketService.getAllTickets (/app/src/modules/supportTicket.service.js:63:13)
-    at async SupportTicketService.getAll (/app/src/modules/supportTicket.service.js:188:20)
-    at async /app/src/routes/supportTicket.routes.js:14:21
->>>>>>> c88de854 (lala)

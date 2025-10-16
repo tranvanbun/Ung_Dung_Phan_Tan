@@ -1,10 +1,25 @@
 import React, { useState } from "react";
-import { X, MapPin, Home, Calendar, Phone, Mail, XCircle } from "lucide-react";
+import {
+  X,
+  MapPin,
+  Home,
+  Calendar,
+  Phone,
+  Mail,
+  Loader2,
+  CheckCircle,
+} from "lucide-react";
+import axios from "axios";
 
 export default function ModalRoomDetail({ room, isOpen, onClose }) {
   if (!isOpen || !room) return null;
 
-  // 🧩 Nếu backend chưa có đủ dữ liệu, dùng fallback mock
+  const [currentImage, setCurrentImage] = useState(0);
+  const [loadingPayment, setLoadingPayment] = useState(false);
+  const [qrUrl, setQrUrl] = useState(null);
+  const [isPaid, setIsPaid] = useState(false);
+
+  // 🧩 Dữ liệu phòng (fallback nếu thiếu)
   const roomData = {
     id: room.id || 1,
     title: room.title || "Phòng trọ cao cấp gần Đại học Bách Khoa",
@@ -13,7 +28,7 @@ export default function ModalRoomDetail({ room, isOpen, onClose }) {
     status: room.status || "available",
     description:
       room.description ||
-      "Phòng mới xây, có ban công, đầy đủ nội thất cơ bản. Gần trường học, siêu thị, giao thông thuận tiện.",
+      "Phòng mới xây, đầy đủ nội thất, gần trường học và siêu thị.",
     address: room.address || "123 Đường Láng, Quận Đống Đa, Hà Nội",
     imageUrls:
       room.imageUrls?.length > 0
@@ -21,9 +36,9 @@ export default function ModalRoomDetail({ room, isOpen, onClose }) {
         : [
             "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800",
             "https://images.unsplash.com/photo-1502672023488-70e25813eb80?w=800",
-            "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800",
           ],
     landlord: room.landlord || {
+      id: 1, // 👈 cần có id chủ trọ để truyền vào backend
       name: "Nguyễn Văn A",
       phone: "0123456789",
       email: "landlord@example.com",
@@ -31,8 +46,6 @@ export default function ModalRoomDetail({ room, isOpen, onClose }) {
     },
     createdAt: room.createdAt || "2024-10-10T10:00:00",
   };
-
-  const [currentImage, setCurrentImage] = useState(0);
 
   const statusConfig = {
     available: {
@@ -52,6 +65,45 @@ export default function ModalRoomDetail({ room, isOpen, onClose }) {
     },
   };
 
+  // 💳 Gọi API Payment-service
+  const handlePayment = async () => {
+    setLoadingPayment(true);
+    try {
+      const storedUser = JSON.parse(localStorage.getItem("user"));
+      if (!storedUser) {
+        alert("Vui lòng đăng nhập trước khi thanh toán!");
+        return;
+      }
+      console.log(room)
+      const body = {
+        tenantId: storedUser.id,
+        landlordId: room.ownerId,
+        amount: roomData.price,
+        description: `Thanh toán phòng #${roomData.id} - ${storedUser.name}`,
+      };
+
+      console.log("📤 Gửi thanh toán:", body);
+
+      const res = await axios.post(
+        "http://localhost:8000/payments/create",
+        body
+      );
+
+      if (res.data?.payment?.qrUrl) {
+        setQrUrl(res.data.payment.qrUrl);
+      } else {
+        alert(res.data.message || "Không tạo được QR thanh toán.");
+      }
+    } catch (error) {
+      console.error("❌ Lỗi khi tạo thanh toán:", error);
+      alert(
+        error.response?.data?.message || "Lỗi khi tạo giao dịch thanh toán!"
+      );
+    } finally {
+      setLoadingPayment(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 overflow-y-auto">
       <div className="relative bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col">
@@ -69,17 +121,14 @@ export default function ModalRoomDetail({ room, isOpen, onClose }) {
         {/* Nội dung */}
         <div className="overflow-y-auto flex-1 p-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Cột trái */}
+            {/* Ảnh phòng */}
             <div className="lg:col-span-2 space-y-6">
-              {/* Ảnh */}
               <div className="relative">
                 <img
                   src={roomData.imageUrls[currentImage]}
                   alt={`Room ${currentImage + 1}`}
                   className="w-full h-96 object-cover rounded-xl"
                 />
-
-                {/* Chuyển ảnh */}
                 <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2 bg-black/50 px-3 py-2 rounded-full">
                   {roomData.imageUrls.map((_, i) => (
                     <button
@@ -93,58 +142,21 @@ export default function ModalRoomDetail({ room, isOpen, onClose }) {
                     />
                   ))}
                 </div>
-
-                {/* Thumbnail */}
-                <div className="mt-4 grid grid-cols-4 gap-2">
-                  {roomData.imageUrls.map((img, i) => (
-                    <img
-                      key={i}
-                      src={img}
-                      alt={`Thumbnail ${i + 1}`}
-                      onClick={() => setCurrentImage(i)}
-                      className={`h-20 object-cover rounded-lg cursor-pointer border-2 transition ${
-                        currentImage === i
-                          ? "border-indigo-600"
-                          : "border-transparent hover:border-gray-300"
-                      }`}
-                    />
-                  ))}
-                </div>
               </div>
 
-              {/* Thông tin chính */}
-              <div>
-                <div className="flex justify-between items-start mb-3">
-                  <h1 className="text-3xl font-bold text-gray-800">
-                    {roomData.title}
-                  </h1>
-                  <span
-                    className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      statusConfig[roomData.status]?.color
-                    }`}
-                  >
-                    {statusConfig[roomData.status]?.icon}{" "}
-                    {statusConfig[roomData.status]?.label}
-                  </span>
-                </div>
+              <h1 className="text-3xl font-bold text-gray-800">
+                {roomData.title}
+              </h1>
 
-                <div className="flex items-center gap-4 text-gray-600">
-                  <span className="flex items-center gap-1">
-                    <Home className="w-4 h-4" />
-                    {roomData.area}m²
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <MapPin className="w-4 h-4" />
-                    {roomData.address}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Calendar className="w-4 h-4" />
-                    {new Date(roomData.createdAt).toLocaleDateString("vi-VN")}
-                  </span>
-                </div>
+              <div className="flex items-center gap-4 text-gray-600">
+                <Home className="w-4 h-4" />
+                {roomData.area}m²
+                <MapPin className="w-4 h-4" />
+                {roomData.address}
+                <Calendar className="w-4 h-4" />
+                {new Date(roomData.createdAt).toLocaleDateString("vi-VN")}
               </div>
 
-              {/* Giá */}
               <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl p-6 text-white">
                 <h3 className="text-indigo-100 text-sm mb-1">
                   Giá thuê / tháng
@@ -154,7 +166,6 @@ export default function ModalRoomDetail({ room, isOpen, onClose }) {
                 </p>
               </div>
 
-              {/* Mô tả */}
               <div>
                 <h3 className="text-lg font-bold text-gray-800 mb-2">
                   📝 Mô tả
@@ -163,24 +174,14 @@ export default function ModalRoomDetail({ room, isOpen, onClose }) {
                   {roomData.description}
                 </p>
               </div>
-
-              {/* Thông báo tình trạng */}
-              {roomData.status !== "available" && (
-                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg flex items-center gap-2 text-yellow-800">
-                  <XCircle className="w-5 h-5" />
-                  Phòng hiện{" "}
-                  {statusConfig[roomData.status]?.label.toLowerCase()}
-                </div>
-              )}
             </div>
 
-            {/* Cột phải */}
+            {/* Chủ trọ + Thanh toán */}
             <div className="space-y-6">
               <div className="bg-white border-2 border-gray-200 rounded-xl p-6 sticky top-6">
                 <h3 className="text-lg font-bold text-gray-800 mb-4">
                   👤 Chủ trọ
                 </h3>
-
                 <div className="flex items-center gap-4 mb-4">
                   <img
                     src={roomData.landlord.avatar}
@@ -194,7 +195,6 @@ export default function ModalRoomDetail({ room, isOpen, onClose }) {
                     <p className="text-sm text-gray-500">Chủ nhà</p>
                   </div>
                 </div>
-
                 <div className="space-y-3 mb-4">
                   <a
                     href={`tel:${roomData.landlord.phone}`}
@@ -212,20 +212,53 @@ export default function ModalRoomDetail({ room, isOpen, onClose }) {
                   </a>
                 </div>
 
-                {/* Nút hành động */}
+                {/* Nút thanh toán */}
                 <div className="space-y-3">
-                  <button className="w-full px-4 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-medium">
-                    📞 Liên hệ ngay
-                  </button>
-                  <button className="w-full px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium">
-                    💳 Đặt thuê / Thanh toán
-                  </button>
+                  {!qrUrl ? (
+                    <button
+                      onClick={handlePayment}
+                      disabled={loadingPayment}
+                      className={`w-full px-4 py-3 rounded-lg font-medium text-white transition ${
+                        loadingPayment
+                          ? "bg-gray-400 cursor-not-allowed"
+                          : "bg-green-600 hover:bg-green-700"
+                      }`}
+                    >
+                      {loadingPayment ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          Đang tạo mã QR...
+                        </span>
+                      ) : (
+                        "💳 Đặt thuê / Thanh toán"
+                      )}
+                    </button>
+                  ) : (
+                    <div className="text-center">
+                      <h3 className="text-gray-800 font-semibold mb-2">
+                        Quét mã VietQR để thanh toán
+                      </h3>
+                      <img
+                        src={qrUrl}
+                        alt="QR Thanh toán"
+                        className="mx-auto w-60 h-60 rounded-lg border p-2 shadow-md"
+                      />
+                      <button
+                        onClick={() => setIsPaid(true)}
+                        className="mt-4 w-full px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+                      >
+                        ✅ Đã thanh toán xong
+                      </button>
+                    </div>
+                  )}
+                  {isPaid && (
+                    <div className="flex items-center justify-center gap-2 mt-3 text-green-600">
+                      <CheckCircle className="w-5 h-5" />
+                      <span>Đã ghi nhận thanh toán!</span>
+                    </div>
+                  )}
                 </div>
               </div>
-
-              <button className="w-full px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition text-sm font-medium">
-                🚩 Báo cáo tin không phù hợp
-              </button>
             </div>
           </div>
         </div>

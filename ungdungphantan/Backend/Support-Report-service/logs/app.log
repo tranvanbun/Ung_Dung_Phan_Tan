@@ -412,7 +412,6 @@
 [2025-10-15T12:48:53.511Z] WARN: Route not found
 [2025-10-15T12:48:53.594Z] INFO: GET /favicon.ico
 [2025-10-15T12:48:53.598Z] WARN: Route not found
-<<<<<<< HEAD
 [2025-10-15T17:17:11.360Z] INFO: GET /api/support-tickets
 [2025-10-15T17:17:11.365Z] INFO: GET /api/support-tickets - userId: 1, status: undefined
 [2025-10-15T17:17:11.530Z] INFO: GET /api/support-tickets
@@ -429,27 +428,27 @@
 [2025-10-16T00:16:04.947Z] INFO: GET /api/support-tickets - userId: 1, status: undefined
 [2025-10-16T00:16:04.960Z] INFO: GET /api/support-tickets
 [2025-10-16T00:16:04.965Z] INFO: GET /api/support-tickets - userId: 1, status: undefined
-=======
-[2025-10-16T00:06:01.481Z] INFO: GET /api/support-tickets
-[2025-10-16T00:06:01.566Z] INFO: GET /api/support-tickets - userId: 1, status: undefined
-[2025-10-16T00:06:01.886Z] INFO: GET /api/support-tickets
-[2025-10-16T00:06:01.900Z] INFO: GET /api/support-tickets - userId: 1, status: undefined
-[2025-10-16T00:06:23.308Z] INFO: GET /api/support-tickets
-[2025-10-16T00:06:23.326Z] INFO: GET /api/support-tickets - userId: 1, status: undefined
-[2025-10-16T00:06:23.577Z] INFO: GET /api/support-tickets
-[2025-10-16T00:06:23.589Z] INFO: GET /api/support-tickets - userId: 1, status: undefined
-[2025-10-16T00:09:27.813Z] INFO: GET /api/support-tickets
-[2025-10-16T00:09:27.821Z] INFO: GET /api/support-tickets - userId: 1, status: undefined
-[2025-10-16T00:09:28.129Z] INFO: GET /api/support-tickets
-[2025-10-16T00:09:28.135Z] INFO: GET /api/support-tickets - userId: 1, status: undefined
-[2025-10-16T00:11:42.572Z] INFO: GET /api/support-tickets
-[2025-10-16T00:11:42.583Z] INFO: GET /api/support-tickets - userId: 1, status: undefined
-[2025-10-16T00:11:42.781Z] INFO: GET /api/support-tickets
-[2025-10-16T00:11:42.788Z] INFO: GET /api/support-tickets - userId: 1, status: undefined
-[2025-10-16T00:12:25.203Z] INFO: POST /api/support-tickets
-[2025-10-16T00:12:25.213Z] INFO: POST /api/support-tickets
-[2025-10-16T00:12:25.291Z] INFO: Creating ticket
-[2025-10-16T00:12:25.348Z] INFO: Ticket created
-[2025-10-16T00:12:25.379Z] INFO: GET /api/support-tickets
-[2025-10-16T00:12:25.418Z] INFO: GET /api/support-tickets - userId: 1, status: undefined
->>>>>>> c88de854 (lala)
+[2025-10-16T07:38:20.885Z] INFO: GET /api/support-tickets
+[2025-10-16T07:38:20.890Z] INFO: GET /api/support-tickets - userId: 3, status: undefined
+[2025-10-16T07:38:21.234Z] INFO: GET /api/support-tickets
+[2025-10-16T07:38:21.237Z] INFO: GET /api/support-tickets - userId: 3, status: undefined
+[2025-10-16T07:39:07.329Z] INFO: GET /api/support-tickets
+[2025-10-16T07:39:07.332Z] INFO: GET /api/support-tickets - userId: 1, status: undefined
+[2025-10-16T07:39:07.341Z] INFO: GET /api/support-tickets
+[2025-10-16T07:39:07.344Z] INFO: GET /api/support-tickets - userId: 1, status: undefined
+[2025-10-16T07:39:42.878Z] INFO: GET /api/support-tickets
+[2025-10-16T07:39:42.882Z] INFO: GET /api/support-tickets - userId: 1, status: undefined
+[2025-10-16T07:39:42.891Z] INFO: GET /api/support-tickets
+[2025-10-16T07:39:42.894Z] INFO: GET /api/support-tickets - userId: 1, status: undefined
+[2025-10-16T07:39:45.901Z] INFO: GET /api/support-tickets
+[2025-10-16T07:39:45.904Z] INFO: GET /api/support-tickets - userId: 1, status: undefined
+[2025-10-16T07:39:45.913Z] INFO: GET /api/support-tickets
+[2025-10-16T07:39:45.916Z] INFO: GET /api/support-tickets - userId: 1, status: undefined
+[2025-10-16T07:44:59.206Z] INFO: GET /api/support-tickets
+[2025-10-16T07:44:59.210Z] INFO: GET /api/support-tickets - userId: 2, status: undefined
+[2025-10-16T07:44:59.305Z] INFO: GET /api/support-tickets
+[2025-10-16T07:44:59.308Z] INFO: GET /api/support-tickets - userId: 2, status: undefined
+[2025-10-16T07:44:59.919Z] INFO: GET /api/support-tickets
+[2025-10-16T07:44:59.922Z] INFO: GET /api/support-tickets - userId: 2, status: undefined
+[2025-10-16T07:44:59.930Z] INFO: GET /api/support-tickets
+[2025-10-16T07:44:59.933Z] INFO: GET /api/support-tickets - userId: 2, status: undefined

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, User, LogOut, Settings } from "lucide-react";
-import axios from "axios"; // ✅ Thêm axios
+import { Bell, User, LogOut, Settings, CreditCard } from "lucide-react";
+import axios from "axios";
 import { getNotifications } from "../api/notificationApi";
 import logo from "../assets/imgs/logo.png";
 
@@ -21,7 +21,7 @@ const Navbar = () => {
     }
   }, []);
 
-  // 📡 Fetch số thông báo chưa đọc
+  // 📡 Lấy số thông báo chưa đọc
   const fetchUnreadCount = async (userId) => {
     try {
       const response = await getNotifications(userId);
@@ -46,21 +46,32 @@ const Navbar = () => {
     navigate("/login");
   };
 
-  // 🛡️ Các route cần đăng nhập
-  const protectedRoutes = [
-    "/contracts",
-    "/support",
-    "/payments",
-    "/landlord/add-room",
-    "/notifications",
-  ];
+  // ✍️ Upload chữ ký
+  const handleSignatureUpload = async (file) => {
+    if (!file || !user) return;
 
-  // ⚙️ Điều hướng có kiểm tra đăng nhập
-  const handleProtectedNav = (path) => {
-    if (!user && protectedRoutes.includes(path)) {
-      navigate("/login");
-    } else {
-      navigate(path);
+    try {
+      const formData = new FormData();
+      formData.append("signature", file);
+      formData.append("id", user.id);
+      formData.append("role", user.role);
+
+      const response = await axios.post(
+        "http://localhost:3000/signatures/upload", // ⚠️ đổi port nếu backend khác
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
+
+      alert("✅ Upload chữ ký thành công!");
+      const updatedUser = {
+        ...user,
+        signaturePath: response.data.signatureUrl,
+      };
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      setUser(updatedUser);
+    } catch (error) {
+      console.error("❌ Lỗi khi tải chữ ký:", error);
+      alert(error.response?.data?.message || "Lỗi khi tải chữ ký lên máy chủ!");
     }
   };
 
@@ -75,38 +86,9 @@ const Navbar = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showDropdown]);
 
-  // 📤 Upload chữ ký trực tiếp qua API
-  const handleSignatureUpload = async (file) => {
-    if (!file || !user) return;
-
-    try {
-      const formData = new FormData();
-      formData.append("signature", file);
-      formData.append("id", user.id);
-      formData.append("role", user.role);
-
-      const response = await axios.post(
-        "http://localhost:3000/signatures/upload", // ⚠️ đổi port nếu backend khác (vd: 4000)
-        formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
-      );
-
-      alert("✅ Upload chữ ký thành công!");
-      console.log("URL chữ ký:", response.data.signatureUrl);
-
-      // Cập nhật user mới có chữ ký
-      const updatedUser = {
-        ...user,
-        signaturePath: response.data.signatureUrl,
-      };
-      localStorage.setItem("user", JSON.stringify(updatedUser));
-      setUser(updatedUser);
-    } catch (error) {
-      console.error("❌ Lỗi khi tải chữ ký lên:", error);
-      alert(
-        error.response?.data?.message || "❌ Lỗi khi tải chữ ký lên máy chủ!"
-      );
-    }
+  // 🧭 Điều hướng menu
+  const handleNav = (path) => {
+    navigate(path);
   };
 
   return (
@@ -126,58 +108,59 @@ const Navbar = () => {
         {/* 🧭 Menu */}
         <div className="hidden md:flex space-x-8">
           <button
-            onClick={() => handleProtectedNav("/")}
-            className="text-gray-200 transition duration-300 pr-5 pl-5 hover:text-blue-600"
+            onClick={() => handleNav("/")}
+            className="text-gray-200 hover:text-blue-400 transition"
           >
             Trang chủ
           </button>
           <button
-            onClick={() => handleProtectedNav("/rooms")}
-            className="text-gray-200 transition duration-300 pr-5 pl-5 hover:text-blue-600"
+            onClick={() => handleNav("/rooms")}
+            className="text-gray-200 hover:text-blue-400 transition"
           >
             Tìm kiếm
           </button>
           <button
-            onClick={() => handleProtectedNav("/contracts")}
-            className="text-gray-200 transition duration-300 pr-5 pl-5 hover:text-blue-600"
+            onClick={() => handleNav("/contracts")}
+            className="text-gray-200 hover:text-blue-400 transition"
           >
             Hợp đồng
           </button>
           <button
-            onClick={() => handleProtectedNav("/support")}
-            className="text-gray-200 transition duration-300 pr-5 pl-5 hover:text-blue-600"
+            onClick={() => handleNav("/support")}
+            className="text-gray-200 hover:text-blue-400 transition"
           >
             Liên hệ
           </button>
           <button
-            onClick={() => handleProtectedNav("/payments")}
-            className="text-gray-200 transition duration-300 pr-5 pl-5 hover:text-blue-600"
+            onClick={() => handleNav("/payments")}
+            className="text-gray-200 hover:text-blue-400 transition"
           >
             Thanh toán
           </button>
+
           {user?.role === "LANDLORD" && (
             <button
-              onClick={() => handleProtectedNav("/landlord/add-room")}
-              className="text-gray-200 transition duration-300 pr-5 pl-5 hover:text-blue-600"
+              onClick={() => handleNav("/landlord/add-room")}
+              className="text-gray-200 hover:text-blue-400 transition"
             >
               Thêm phòng
             </button>
           )}
         </div>
 
-        {/* 👤 User Area */}
+        {/* 👤 User */}
         <div className="hidden md:flex items-center space-x-4">
           {!user ? (
             <>
               <button
                 onClick={() => navigate("/login")}
-                className="px-4 py-2 text-sm text-white border border-blue-600 rounded-lg hover:bg-blue-700 transition duration-300"
+                className="px-4 py-2 text-sm text-white border border-blue-600 rounded-lg hover:bg-blue-700 transition"
               >
                 Đăng nhập
               </button>
               <button
                 onClick={() => navigate("/register")}
-                className="px-4 py-2 text-sm border border-blue-600 text-white rounded-lg hover:bg-blue-600 hover:text-white transition duration-300"
+                className="px-4 py-2 text-sm border border-blue-600 text-white rounded-lg hover:bg-blue-600 transition"
               >
                 Đăng ký
               </button>
@@ -186,7 +169,7 @@ const Navbar = () => {
             <div className="flex items-center gap-4">
               {/* 🔔 Thông báo */}
               <button
-                onClick={() => handleProtectedNav("/notifications")}
+                onClick={() => handleNav("/notifications")}
                 className="relative p-2 hover:bg-gray-700 rounded-full transition group"
                 title="Thông báo"
               >
@@ -217,26 +200,10 @@ const Navbar = () => {
                   <span className="text-gray-200 font-semibold group-hover:text-blue-400 transition">
                     {user.name}
                   </span>
-                  <svg
-                    className={`w-4 h-4 text-gray-400 transition-transform ${
-                      showDropdown ? "rotate-180" : ""
-                    }`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
                 </button>
 
-                {/* 🧾 Dropdown menu */}
                 {showDropdown && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl py-2 z-50 border border-gray-200">
+                  <div className="absolute right-0 mt-2 w-60 bg-white rounded-lg shadow-xl py-2 z-50 border border-gray-200">
                     <div className="px-4 py-3 border-b border-gray-200">
                       <p className="text-sm font-semibold text-gray-800">
                         {user.name}
@@ -273,44 +240,66 @@ const Navbar = () => {
                       </span>
                     </button>
 
-                    {/* 🖋️ Upload chữ ký */}
-                    <button
-                      onClick={() =>
-                        document.getElementById("signatureInput").click()
-                      }
-                      className="w-full px-4 py-3 text-left text-gray-700 hover:bg-blue-50 flex items-center gap-3 group"
-                    >
-                      <Settings className="w-5 h-5 text-gray-500 group-hover:text-blue-600" />
-                      <span className="font-medium group-hover:text-blue-600">
-                        Thêm chữ ký
-                      </span>
-                    </button>
-
-                    <input
-                      id="signatureInput"
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => handleSignatureUpload(e.target.files[0])}
-                    />
-
-                    {/* ✅ Hiển thị chữ ký (nếu có) */}
-                    {user.signaturePath && (
-                      <div className="border-t border-gray-200 mt-2 px-4 py-3 text-center">
-                        <p className="text-sm text-gray-700 mb-2 font-medium">
-                          Chữ ký của bạn:
-                        </p>
-                        <img
-                          src={user.signaturePath}
-                          alt="Chữ ký"
-                          className="w-32 mx-auto border rounded-md shadow-sm"
-                        />
-                      </div>
+                    {/* 💳 Thêm thẻ ngân hàng */}
+                    {user.role === "LANDLORD" && (
+                      <button
+                        onClick={() => {
+                          navigate(`/profile/${user.id}/bank`);
+                          setShowDropdown(false);
+                        }}
+                        className="w-full px-4 py-3 text-left text-gray-700 hover:bg-green-50 flex items-center gap-3 group"
+                      >
+                        <CreditCard className="w-5 h-5 text-gray-500 group-hover:text-green-600" />
+                        <span className="font-medium group-hover:text-green-600">
+                          Thêm thẻ ngân hàng
+                        </span>
+                      </button>
                     )}
 
-                    <div className="border-t border-gray-200 mt-2"></div>
+                    {/* 🖋️ Upload chữ ký cho cả USER và LANDLORD */}
+                    {(user.role === "LANDLORD" || user.role === "USER") && (
+                      <>
+                        <button
+                          onClick={() =>
+                            document.getElementById("signatureInput").click()
+                          }
+                          className="w-full px-4 py-3 text-left text-gray-700 hover:bg-blue-50 flex items-center gap-3 group"
+                        >
+                          <Settings className="w-5 h-5 text-gray-500 group-hover:text-blue-600" />
+                          <span className="font-medium group-hover:text-blue-600">
+                            {user.signaturePath
+                              ? "Cập nhật chữ ký"
+                              : "Thêm chữ ký"}
+                          </span>
+                        </button>
+
+                        <input
+                          id="signatureInput"
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) =>
+                            handleSignatureUpload(e.target.files[0])
+                          }
+                        />
+
+                        {user.signaturePath && (
+                          <div className="border-t border-gray-200 mt-2 px-4 py-3 text-center">
+                            <p className="text-sm text-gray-700 mb-2 font-medium">
+                              Chữ ký của bạn:
+                            </p>
+                            <img
+                              src={user.signaturePath}
+                              alt="Chữ ký"
+                              className="w-32 mx-auto border rounded-md shadow-sm object-contain"
+                            />
+                          </div>
+                        )}
+                      </>
+                    )}
 
                     {/* Đăng xuất */}
+                    <div className="border-t border-gray-200 mt-2"></div>
                     <button
                       onClick={handleLogout}
                       className="w-full px-4 py-3 text-left text-red-600 hover:bg-red-50 flex items-center gap-3 group"

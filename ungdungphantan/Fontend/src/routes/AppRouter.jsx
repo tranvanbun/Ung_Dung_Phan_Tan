@@ -3,6 +3,7 @@ import Home from "../pages/User/home";
 import AuthPage from "../Component/AuthForm";
 import LoginForm from "../Component/LoginForm";
 import Room from "../pages/User/SearchPage";
+import BankSetupPage from "../pages/User/Landlord/BankSetupPage";
 
 // --- Admin Pages ---
 import AdminDashboard from "../pages/Admin/Dashbord";
@@ -34,6 +35,7 @@ export default function AppRouter() {
     <Routes>
       {/* --- Layout cho user --- */}
       <Route element={<UserLayout />}>
+       <Route path="/profile/:id/bank" element={<BankSetupPage />} />
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<LoginForm />} />
         <Route path="/register" element={<AuthPage />} />

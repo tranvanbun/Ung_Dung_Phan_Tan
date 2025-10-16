@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { createRoom } from "../../../api/roomApi"; // ✅ Import API đã có sẵn
+import axios from "axios";
 
 export default function AddRoom() {
   const [formData, setFormData] = useState({
@@ -43,18 +43,6 @@ export default function AddRoom() {
         alert("Chỉ chủ nhà mới có quyền thêm phòng.");
         return;
       }
-
-      // Kiểm tra các trường bắt buộc
-      if (
-        !formData.title ||
-        !formData.price ||
-        !formData.area ||
-        !formData.address
-      ) {
-        alert("Vui lòng điền đầy đủ thông tin bắt buộc.");
-        return;
-      }
-
       const form = new FormData();
       form.append("title", formData.title);
       form.append("description", formData.description);
@@ -62,11 +50,9 @@ export default function AddRoom() {
       form.append("area", formData.area);
       form.append("address", formData.address);
       form.append("ownerId", user.id);
-
       // Gửi ảnh (nếu có)
       const fileInput = document.getElementById("image-upload");
       const files = fileInput.files;
-
       if (files.length > 0) {
         for (let i = 0; i < files.length; i++) {
           form.append("images", files[i]);
@@ -75,13 +61,12 @@ export default function AddRoom() {
         alert("Vui lòng tải lên ít nhất một hình ảnh của phòng.");
         return;
       }
-
-      // ✅ Gọi API đúng (đã sửa từ /rooms thành /api/rooms)
-      const res = await createRoom(form);
-
+      // Gọi API
+      const res = await axios.post("http://localhost:4000/rooms", form, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
       alert("Thêm phòng thành công!");
-      console.log("✅ Phòng mới:", res);
-
+      console.log("✅ Phòng mới:", res.data);
       // Reset form
       setFormData({
         title: "",
@@ -94,7 +79,7 @@ export default function AddRoom() {
       document.getElementById("image-upload").value = null;
     } catch (error) {
       console.error("❌ Lỗi thêm phòng:", error);
-      alert(error.response?.data?.message || "Có lỗi xảy ra khi thêm phòng!");
+      alert(error.message);
     }
   };
 
@@ -110,13 +95,16 @@ export default function AddRoom() {
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Tiêu đề <span className="text-red-500">*</span>
           </label>
-          <input
-            type="text"
+          <select
             value={formData.title}
             onChange={(e) => handleChange("title", e.target.value)}
-            placeholder="VD: Phòng trọ 25m² gần Đại học Bách Khoa"
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-          />
+          >
+            <option value="">-- Chọn loại phòng --</option>
+            <option value="Chung cư">Chung cư</option>
+            <option value="Nhà nguyên căn">Nhà nguyên căn</option>
+            <option value="Phòng trọ">Phòng trọ</option>
+          </select>
         </div>
 
         {/* Mô tả */}
@@ -137,7 +125,7 @@ export default function AddRoom() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Giá thuê (VND/tháng) <span className="text-red-500">*</span>
+              Giá thuê (VND/tháng)
             </label>
             <input
               type="number"
@@ -149,7 +137,7 @@ export default function AddRoom() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Diện tích (m²) <span className="text-red-500">*</span>
+              Diện tích (m²)
             </label>
             <input
               type="number"
@@ -164,7 +152,7 @@ export default function AddRoom() {
         {/* Địa chỉ */}
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Địa chỉ <span className="text-red-500">*</span>
+            Địa chỉ
           </label>
           <input
             type="text"
@@ -178,7 +166,7 @@ export default function AddRoom() {
         {/* Ảnh */}
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-700 mb-3">
-            Hình ảnh phòng <span className="text-red-500">*</span>
+            Hình ảnh phòng
           </label>
           <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-indigo-500 transition">
             <input

@@ -48,7 +48,7 @@ export const createRoom = async (req, res) => {
 
 export const getAllRooms = async (req, res) => {
   try {
-    const { location, type, minPrice, maxPrice } = req.query;
+    const { location, type, minPrice, maxPrice, ownerId } = req.query;
 
     // Tạo điều kiện lọc động
     const filters = {};
@@ -79,6 +79,9 @@ export const getAllRooms = async (req, res) => {
     const rooms = await prisma.room.findMany({
       where: filters,
       orderBy: { createdAt: "desc" },
+      include: {
+        landlord: true, // ✅ thêm dòng này để lấy cả thông tin chủ trọ
+      },
     });
 
     res.status(200).json(rooms);
@@ -224,7 +227,6 @@ export const updateRoomStatus = async (req, res) => {
       .json({ message: "Lỗi server khi cập nhật trạng thái phòng" });
   }
 };
-
 
 export const getLatestRooms = async (req, res) => {
   try {

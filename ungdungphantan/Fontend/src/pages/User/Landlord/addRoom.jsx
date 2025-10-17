@@ -62,7 +62,7 @@ export default function AddRoom() {
         return;
       }
       // Gọi API
-      const res = await axios.post("http://localhost:4000/rooms", form, {
+      const res = await axios.post("http://localhost:8000/rooms", form, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       alert("Thêm phòng thành công!");

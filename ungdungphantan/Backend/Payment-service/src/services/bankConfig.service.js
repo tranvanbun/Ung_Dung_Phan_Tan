@@ -1,10 +1,10 @@
-import { PrismaClient } from "../generated/prisma/index.js";
+// src/services/bankConfig.service.js
+const { PrismaClient } = require("../generated/prisma");
 const prisma = new PrismaClient();
 
 // 🧩 Tạo hoặc cập nhật cấu hình ngân hàng
-export const upsertBankConfig = async (req, res) => {
+async function upsertBankConfig(req, res) {
   try {
-    // 🟩 Lấy dữ liệu từ body (không dùng params nữa)
     const { landlordId, bankCode, bankName, accountNo, accountName } = req.body;
 
     if (!landlordId)
@@ -45,10 +45,10 @@ export const upsertBankConfig = async (req, res) => {
     console.error("❌ Lỗi khi lưu cấu hình ngân hàng:", error);
     return res.status(500).json({ message: error.message });
   }
-};
+}
 
 // 🧭 Lấy thông tin cấu hình ngân hàng theo landlordId
-export const getBankConfig = async (req, res) => {
+async function getBankConfig(req, res) {
   try {
     const { landlordId } = req.params;
 
@@ -67,4 +67,10 @@ export const getBankConfig = async (req, res) => {
     console.error("❌ Lỗi khi lấy thông tin ngân hàng:", error);
     return res.status(500).json({ message: "Lỗi server" });
   }
+}
+
+// 🧩 Export cho router dùng
+module.exports = {
+  upsertBankConfig,
+  getBankConfig,
 };

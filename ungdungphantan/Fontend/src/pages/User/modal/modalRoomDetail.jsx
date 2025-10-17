@@ -38,7 +38,7 @@ export default function ModalRoomDetail({ room, isOpen, onClose }) {
             "https://images.unsplash.com/photo-1502672023488-70e25813eb80?w=800",
           ],
     landlord: room.landlord || {
-      id: 1, // 👈 cần có id chủ trọ để truyền vào backend
+      id: 1,
       name: "Nguyễn Văn A",
       phone: "0123456789",
       email: "landlord@example.com",
@@ -47,57 +47,45 @@ export default function ModalRoomDetail({ room, isOpen, onClose }) {
     createdAt: room.createdAt || "2024-10-10T10:00:00",
   };
 
-  const statusConfig = {
-    available: {
-      color: "bg-green-100 text-green-700",
-      label: "Còn trống",
-      icon: "✅",
-    },
-    occupied: {
-      color: "bg-red-100 text-red-700",
-      label: "Đã cho thuê",
-      icon: "🔒",
-    },
-    maintenance: {
-      color: "bg-yellow-100 text-yellow-700",
-      label: "Đang bảo trì",
-      icon: "🔧",
-    },
-  };
-
-  // 💳 Gọi API Payment-service
+  // ⚙️ Hàm xử lý thanh toán
   const handlePayment = async () => {
     setLoadingPayment(true);
     try {
       const storedUser = JSON.parse(localStorage.getItem("user"));
       if (!storedUser) {
-        alert("Vui lòng đăng nhập trước khi thanh toán!");
+        alert("⚠️ Vui lòng đăng nhập trước khi thanh toán!");
         return;
       }
-      console.log(room)
+
+      // 🧾 Dữ liệu gửi sang payment-service
       const body = {
-        tenantId: storedUser.id,
-        landlordId: room.ownerId,
-        amount: roomData.price,
-        description: `Thanh toán phòng #${roomData.id} - ${storedUser.name}`,
+        roomId: roomData.id,
+        roomPrice: roomData.price,
       };
 
-      console.log("📤 Gửi thanh toán:", body);
+      console.log("📤 Gửi yêu cầu thanh toán:", body);
 
       const res = await axios.post(
-        "http://localhost:8000/payments/create",
+        "http://localhost:4000/payments/create", // ✅ Gọi trực tiếp Payment-service
         body
       );
 
-      if (res.data?.payment?.qrUrl) {
-        setQrUrl(res.data.payment.qrUrl);
+      const payment = res.data?.payment;
+
+      if (payment?.checkoutUrl) {
+        // ✅ Cách 1: mở trang thanh toán PayOS trực tiếp
+        window.open(payment.checkoutUrl, "_blank");
+      } else if (payment?.qrCode) {
+        // ✅ Cách 2: hiển thị QR nếu API trả về mã
+        setQrUrl(payment.qrCode);
       } else {
-        alert(res.data.message || "Không tạo được QR thanh toán.");
+        alert("Không tạo được link thanh toán!");
       }
     } catch (error) {
-      console.error("❌ Lỗi khi tạo thanh toán:", error);
+      console.error("❌ Lỗi thanh toán:", error);
       alert(
-        error.response?.data?.message || "Lỗi khi tạo giao dịch thanh toán!"
+        error.response?.data?.message ||
+          "Lỗi khi tạo giao dịch thanh toán! Vui lòng thử lại."
       );
     } finally {
       setLoadingPayment(false);

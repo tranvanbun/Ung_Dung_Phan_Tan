@@ -1,3 +1,4 @@
+# docker exec -it room_service_db psql -U postgres -d room_service_db
 FROM node:20-alpine
 
 RUN apk add --no-cache \

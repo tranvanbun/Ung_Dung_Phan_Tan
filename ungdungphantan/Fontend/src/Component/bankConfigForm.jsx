@@ -17,7 +17,7 @@ export default function BankConfigForm({ landlordId }) {
     (async () => {
       try {
         const res = await axios.get(
-          `http://localhost:8000/bank-config/${landlordId}`
+          `http://localhost:4000/bank-config/${landlordId}`
         );
         console.log(res);
         if (res.data) {
@@ -48,7 +48,7 @@ export default function BankConfigForm({ landlordId }) {
 
     try {
       const res = await axios.post(
-        "http://localhost:8000/bank-config",
+        "http://localhost:4000/bank-config",
         {
           landlordId: Number(landlordId),
           ...form,

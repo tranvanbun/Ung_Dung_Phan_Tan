@@ -5,6 +5,16 @@ import { FiMapPin, FiStar, FiHeart } from "react-icons/fi";
 const fallbackImg =
   "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=1200&auto=format&fit=crop";
 
+// 🧠 Hàm tự động resize ảnh Cloudinary (nếu có)
+const optimizeImage = (url, width = 800, height = 600) => {
+  if (!url) return fallbackImg;
+  if (!url.includes("res.cloudinary.com")) return url; // không phải cloudinary thì giữ nguyên
+  return url.replace(
+    "/upload/",
+    `/upload/c_fill,w_${width},h_${height},q_auto,f_auto/`
+  );
+};
+
 export default function RoomCard({
   title,
   price,
@@ -27,17 +37,17 @@ export default function RoomCard({
       onClick={onClick}
       className="group relative overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-200 hover:shadow-xl transition-all cursor-pointer"
     >
-      {/* Image: ép chiều cao cố định */}
-      <div className="relative w-full h-48 overflow-hidden">
+      {/* 🖼 Ảnh phòng */}
+      <div className="relative w-full h-56 overflow-hidden bg-gray-100">
         <img
-          src={imageUrl || fallbackImg}
+          src={optimizeImage(imageUrl)}
+          alt={title}
           loading="lazy"
           onError={(e) => (e.currentTarget.src = fallbackImg)}
-          alt={title}
           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
         />
 
-        {/* Favorite button */}
+        {/* ❤️ Nút yêu thích */}
         <button
           type="button"
           onClick={(e) => {
@@ -54,7 +64,7 @@ export default function RoomCard({
           />
         </button>
 
-        {/* Rating (nếu có) */}
+        {/* ⭐️ Rating */}
         {rating && (
           <div className="absolute left-3 top-3 flex items-center gap-1 rounded-full bg-black/70 px-2 py-1 text-xs text-white">
             <FiStar className="h-4 w-4" />
@@ -63,7 +73,7 @@ export default function RoomCard({
         )}
       </div>
 
-      {/* Content */}
+      {/* 📄 Thông tin */}
       <div className="p-4">
         <div className="mb-2 flex items-start justify-between gap-3">
           <h3 className="line-clamp-2 text-base font-semibold text-gray-900">
@@ -89,7 +99,7 @@ export default function RoomCard({
         </div>
       </div>
 
-      {/* Bottom border hover accent */}
+      {/* Hiệu ứng border khi hover */}
       <div className="absolute inset-x-0 bottom-0 h-0.5 bg-transparent transition-colors group-hover:bg-indigo-500" />
     </div>
   );

@@ -1,12 +1,14 @@
-import express from "express";
-import {
-  upsertBankConfig,
-  getBankConfig,
-} from "../services/bankConfig.service.js";
-
+// src/routes/bankConfig.routes.js
+const express = require("express");
 const router = express.Router();
 
+const {
+  upsertBankConfig,
+  getBankConfig,
+} = require("../services/bankConfig.service");
+
+// 🧭 Routes cấu hình ngân hàng
 router.get("/:landlordId", getBankConfig);
 router.post("/", upsertBankConfig);
 
-export default router;
+module.exports = router;

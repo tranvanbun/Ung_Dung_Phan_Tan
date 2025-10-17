@@ -1,8 +1,11 @@
-import express from "express";
-import { createPayment } from "../services/payment.service.js";
-
+const express = require("express");
 const router = express.Router();
+const paymentService = require("../services/payment.service");
 
-router.post("/create", createPayment);
+// 🎯 API tạo QR/link thanh toán
+router.post("/create", paymentService.handleCreatePayment);
 
-export default router;
+// 📩 Webhook callback từ PayOS
+router.post("/webhook", paymentService.handleWebhook);
+
+module.exports = router;

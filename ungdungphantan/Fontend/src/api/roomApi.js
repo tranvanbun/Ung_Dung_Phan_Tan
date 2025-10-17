@@ -1,5 +1,5 @@
 import axios from "axios";
-const BASE_URL = "http://localhost:4000";
+const BASE_URL = "http://localhost:8000";
 export const getAllRooms = async (filters = {}) => {
   try {
     const params = new URLSearchParams(filters).toString();

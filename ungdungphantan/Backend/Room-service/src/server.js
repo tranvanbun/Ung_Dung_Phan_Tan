@@ -4,7 +4,6 @@ import cors from "cors";
 import roomRoutes from "./routes/room.routes.js";
 import contract from "./routes/contract.routes.js";
 dotenv.config();
-
 const app = express();
 app.use(cors());
 app.use(express.json());

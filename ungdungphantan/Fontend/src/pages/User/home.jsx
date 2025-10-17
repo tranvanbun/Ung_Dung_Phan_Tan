@@ -18,7 +18,7 @@ const Home = () => {
   useEffect(() => {
     const fetchRooms = async () => {
       try {
-        const res = await fetch("http://localhost:4000/rooms/latest");
+        const res = await fetch("http://localhost:8000/rooms/latest");
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
 
         const data = await res.json();

@@ -1,59 +1,143 @@
-import { PrismaClient } from "../generated/prisma/index.js";
+const PayOS = require("@payos/node");
+const crypto = require("crypto");
+const axios = require("axios");
+const dotenv = require("dotenv");
+dotenv.config();
 
-import axios from "axios";
-const prisma = new PrismaClient();
-export const createPayment = async (req, res) => {
+const payos = new PayOS(
+  process.env.PAYOS_CLIENT_ID,
+  process.env.PAYOS_API_KEY,
+  process.env.PAYOS_CHECKSUM_KEY
+);
+
+// ======================================
+// 🎯 1️⃣ TẠO LINK THANH TOÁN
+// ======================================
+export async function createPaymentLink(roomId, roomPrice) {
   try {
-    const { tenantId, landlordId, amount, description } = req.body;
+    // 🧾 Mô tả thanh toán
+    const description = `Coc tien nha #${roomId}`.slice(0, 25); // PayOS chỉ cho tối đa 25 ký tự
 
-    // 🔹 Lấy cấu hình ngân hàng của chủ nhà
-    const config = await prisma.bankConfig.findUnique({
-      where: { landlordId: Number(landlordId) },
+    // 🧾 Dữ liệu gửi sang PayOS
+    const paymentData = {
+      orderCode: Number(roomId),
+      amount: Math.round(roomPrice), 
+      description, 
+      items: [
+        {
+          name: `Phòng trọ #${roomId}`,
+          quantity: 1,
+          price: Math.round(roomPrice),
+        },
+      ],
+      returnUrl: process.env.PAYOS_RETURN_URL,
+      cancelUrl: process.env.PAYOS_CANCEL_URL,
+    };
+
+    console.log("📦 Gửi sang PayOS:", paymentData);
+
+    const response = await payos.createPaymentLink(paymentData);
+    console.log("✅ Phản hồi PayOS:", response);
+
+    return {
+      message: "Tạo link thanh toán thành công",
+      payment: response,
+    };
+  } catch (err) {
+    console.error("❌ Lỗi tạo link thanh toán PayOS:", err.message);
+    throw new Error("Không thể tạo link thanh toán PayOS");
+  }
+}
+
+// ======================================
+// 🧾 2️⃣ XÁC THỰC WEBHOOK
+// ======================================
+function verifyWebhook(reqBody) {
+  const { data } = reqBody;
+  if (!data?.signature) throw new Error("Thiếu chữ ký (signature)");
+
+  const signatureReceived = data.signature;
+  const cloned = { ...data };
+  delete cloned.signature;
+
+  const computedSignature = crypto
+    .createHmac("sha256", process.env.PAYOS_CHECKSUM_KEY)
+    .update(JSON.stringify(cloned))
+    .digest("hex");
+
+  if (signatureReceived !== computedSignature)
+    throw new Error("Chữ ký webhook không hợp lệ!");
+
+  console.log("✅ Webhook hợp lệ từ PayOS:", data);
+  return data;
+}
+
+// ======================================
+// 🔁 3️⃣ GỬI CẬP NHẬT TRẠNG THÁI SANG CONTRACT-SERVICE
+// ======================================
+async function notifyContractService(orderCode, status) {
+  try {
+    await axios.post("http://localhost:4005/contracts/update-status", {
+      orderCode,
+      status,
     });
+    console.log(`📨 Đã gửi cập nhật ${status} cho hợp đồng #${orderCode}`);
+  } catch (err) {
+    console.error("⚠️ Không thể gửi cập nhật sang Contract-service:", err.message);
+  }
+}
 
-    if (!config) {
-      return res.status(400).json({ message: "Chủ nhà chưa cấu hình VietQR" });
+// ======================================
+// 🚀 4️⃣ HANDLER CHO ROUTE
+// ======================================
+
+// 🧩 /payments/create
+async function handleCreatePayment(req, res) {
+  try {
+    const { roomId, amount, description } = req.body;
+
+    if (!roomId || !amount) {
+      return res.status(400).json({ error: "Thiếu roomId hoặc amount" });
     }
 
-    // 🔹 Gọi API VietQR.io
-    const response = await axios.post("https://api.vietqr.io/v2/generate", {
-      accountNo: config.accountNo,
-      accountName: config.accountName,
-      acqId: mapBankCodeToAcqId(config.bankCode),
-      addInfo: description,
-      amount,
-      template: "compact",
+    const payment = await createPaymentLink(roomId, amount, description);
+    return res.status(200).json({
+      message: "Tạo link thanh toán thành công",
+      payment,
     });
-
-    const qrUrl = response.data.data.qrDataURL;
-
-    // 🔹 Lưu thông tin thanh toán vào DB
-    const payment = await prisma.payment.create({
-      data: {
-        tenantId,
-        landlordId,
-        amount: parseFloat(amount),
-        description,
-        qrUrl,
-      },
-    });
-
-    res.status(201).json({ message: "Tạo QR thanh toán thành công", payment });
-  } catch (error) {
-    console.error("❌ Lỗi tạo thanh toán:", error);
-    res.status(500).json({ message: "Không thể tạo QR VietQR" });
+  } catch (err) {
+    console.error("❌ Lỗi tạo link:", err.message);
+    return res.status(400).json({ error: err.message });
   }
-};
-
-// ⚙️ Ánh xạ mã ngân hàng sang ID VietQR
-function mapBankCodeToAcqId(code) {
-  const bankMap = {
-    VCB: 970436, // Vietcombank
-    TCB: 970407, // Techcombank
-    MBB: 970422, // MBBank
-    BIDV: 970418,
-    ACB: 970416,
-    VPB: 970432,
-  };
-  return bankMap[code] || 970436;
 }
+
+// 🧩 /payments/webhook
+async function handleWebhook(req, res) {
+  try {
+    console.log("📩 Nhận callback từ PayOS:", req.body);
+    const verifiedData = verifyWebhook(req.body);
+    const { code, data } = req.body;
+
+    if (code === "success") {
+      console.log("💰 Thanh toán thành công:", data.orderCode);
+      await notifyContractService(data.orderCode, "PAID");
+    } else if (code === "cancel") {
+      console.log("❌ Thanh toán bị hủy:", data.orderCode);
+      await notifyContractService(data.orderCode, "CANCELLED");
+    }
+
+    return res.status(200).json({ message: "Webhook received" });
+  } catch (err) {
+    console.error("🚨 Lỗi xử lý webhook:", err.message);
+    return res.status(400).json({ error: err.message });
+  }
+}
+
+
+module.exports = {
+  createPaymentLink,
+  verifyWebhook,
+  notifyContractService,
+  handleCreatePayment,
+  handleWebhook,
+};

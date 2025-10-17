@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const PAYMENT_URL = "http://localhost:8000/bank-config";
+const PAYMENT_URL = "http://localhost:4000/bank-config";
 
 export const upsertBankConfig = async (data) => {
   const res = await axios.post(`${PAYMENT_URL}/upsert`, data);

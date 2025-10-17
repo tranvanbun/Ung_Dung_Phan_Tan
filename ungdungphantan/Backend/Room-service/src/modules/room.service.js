@@ -8,25 +8,32 @@ export const createRoom = async (req, res) => {
     const { title, description, price, area, address, ownerId } = req.body;
     let uploadedUrls = [];
 
-    // Upload ảnh (nếu có)
+    // 🧩 Kiểm tra có file không
     if (req.files && req.files.length > 0) {
       for (const file of req.files) {
-        await new Promise((resolve, reject) => {
+        const result = await new Promise((resolve, reject) => {
           const stream = cloudinary.uploader.upload_stream(
-            { folder: "rooms" },
+            {
+              folder: "rooms",
+              resource_type: "image",
+              transformation: [
+                { width: 800, height: 600, crop: "fill", quality: "auto" }, // ✅ resize ảnh trước khi lưu
+              ],
+            },
             (err, result) => {
               if (err) reject(err);
-              else {
-                uploadedUrls.push(result.secure_url);
-                resolve(result);
-              }
+              else resolve(result);
             }
           );
           stream.end(file.buffer);
         });
+
+        // ✅ Dùng link nén + resize tự động
+        uploadedUrls.push(result.secure_url);
       }
     }
 
+    // ✅ Tạo bản ghi phòng
     const room = await prisma.room.create({
       data: {
         title,
@@ -34,12 +41,15 @@ export const createRoom = async (req, res) => {
         price: parseFloat(price),
         area: parseFloat(area),
         address,
-        imageUrls: uploadedUrls,
+        imageUrls: uploadedUrls, // mảng string
         ownerId: parseInt(ownerId),
       },
     });
 
-    res.status(201).json({ message: "✅ Phòng đã được thêm!", room });
+    res.status(201).json({
+      message: "✅ Phòng đã được thêm thành công!",
+      room,
+    });
   } catch (error) {
     console.error("❌ Lỗi khi thêm phòng:", error);
     res.status(500).json({ message: "Lỗi server khi thêm phòng" });
@@ -50,10 +60,8 @@ export const getAllRooms = async (req, res) => {
   try {
     const { location, type, minPrice, maxPrice, ownerId } = req.query;
 
-    // Tạo điều kiện lọc động
     const filters = {};
 
-    // Lọc theo địa chỉ
     if (location) {
       filters.address = {
         contains: location,
@@ -61,7 +69,6 @@ export const getAllRooms = async (req, res) => {
       };
     }
 
-    // Lọc theo loại phòng (title có chứa từ khóa)
     if (type) {
       filters.title = {
         contains: type,
@@ -69,18 +76,29 @@ export const getAllRooms = async (req, res) => {
       };
     }
 
-    // Lọc theo giá
     if (minPrice || maxPrice) {
       filters.price = {};
       if (minPrice) filters.price.gte = parseFloat(minPrice);
       if (maxPrice) filters.price.lte = parseFloat(maxPrice);
     }
 
+    if (ownerId) {
+      filters.ownerId = parseInt(ownerId);
+    }
+
     const rooms = await prisma.room.findMany({
       where: filters,
       orderBy: { createdAt: "desc" },
-      include: {
-        landlord: true, // ✅ thêm dòng này để lấy cả thông tin chủ trọ
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        price: true,
+        area: true,
+        address: true,
+        imageUrls: true,
+        ownerId: true,
+        createdAt: true,
       },
     });
 
@@ -94,9 +112,25 @@ export const getAllRooms = async (req, res) => {
 export const getRoomById = async (req, res) => {
   try {
     const roomId = Number(req.params.id);
-    const room = await prisma.room.findUnique({ where: { id: roomId } });
 
-    if (!room) return res.status(404).json({ message: "Không tìm thấy phòng" });
+    const room = await prisma.room.findUnique({
+      where: { id: roomId },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        price: true,
+        area: true,
+        address: true,
+        imageUrls: true,
+        ownerId: true, // ✅ Lấy ownerId
+        createdAt: true,
+      },
+    });
+
+    if (!room) {
+      return res.status(404).json({ message: "Không tìm thấy phòng" });
+    }
 
     res.status(200).json(room);
   } catch (error) {

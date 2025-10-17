@@ -21,8 +21,8 @@ export default function SearchPage() {
   // ✅ Hàm gọi API trực tiếp tới backend
   const fetchRooms = async () => {
     try {
-      // ⚠️ Đổi URL nếu bạn đang chạy bằng Docker (ví dụ http://room-service:4000)
-      const baseUrl = "http://localhost:4000/rooms";
+      // ⚠️ Đổi URL nếu bạn đang chạy bằng Docker (ví dụ http://room-service:8000)
+      const baseUrl = "http://localhost:8000/rooms";
 
       // Tạo query string (lọc theo các ô nhập)
       const params = {};
